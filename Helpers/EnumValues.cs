@@ -72,8 +72,8 @@ namespace SAIN.Helpers
                 WildSpawnType.sectantWarrior,
             };
 
-            public static readonly WildSpawnType Usec = Parse<WildSpawnType>("sptUsec");
-            public static readonly WildSpawnType Bear = Parse<WildSpawnType>("sptBear");
+            public static readonly WildSpawnType Usec = Parse<WildSpawnType>("pmcUSEC");
+            public static readonly WildSpawnType Bear = Parse<WildSpawnType>("pmcBEAR");
 
             public static List<WildSpawnType> Bosses;
             public static List<WildSpawnType> Followers;

@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
+using DoorStruct = GStruct19;
+
 namespace SAIN.SAINComponent.Classes.Mover
 {
     public class SAINDoorOpener
@@ -56,7 +58,7 @@ namespace SAIN.SAINComponent.Classes.Mover
             {
                 List<NavMeshDoorLink> list = this.BotOwner.CellData.CurrentDoorLinks();
                 this.NearDoor = false;
-                GStruct18? gstruct = this.findDoorToInteract(list, null);
+                DoorStruct? gstruct = this.findDoorToInteract(list, null);
                 if (gstruct == null)
                 {
                     return true;
@@ -84,7 +86,7 @@ namespace SAIN.SAINComponent.Classes.Mover
                     bool wantToOpen;
                     if (!(wantToOpen = this.CheckWantToOpen(targetDest, gstruct.Value)) && list.Count > 1)
                     {
-                        gstruct = this.findDoorToInteract(list, new GStruct18?(gstruct.Value));
+                        gstruct = this.findDoorToInteract(list, new DoorStruct?(gstruct.Value));
                         if (gstruct == null)
                         {
                             return true;
@@ -219,9 +221,9 @@ namespace SAIN.SAINComponent.Classes.Mover
             return true;
         }
 
-        public GStruct18? findDoorToInteract(List<NavMeshDoorLink> list, [CanBeNull] GStruct18? exclude)
+        public DoorStruct? findDoorToInteract(List<NavMeshDoorLink> list, [CanBeNull] DoorStruct? exclude)
         {
-            GStruct18? result = null;
+            DoorStruct? result = null;
             float num = 2f;
             for (int i = 0; i < list.Count; i++)
             {
@@ -242,21 +244,21 @@ namespace SAIN.SAINComponent.Classes.Mover
                     {
                         num = sqrMagnitude;
                         this._currLink = navMeshDoorLink;
-                        GStruct18 value = new GStruct18
+                        DoorStruct value = new DoorStruct
                         {
                             LinkDoor = navMeshDoorLink,
                             CurDist = sqrMagnitude
                         };
-                        result = new GStruct18?(value);
+                        result = new DoorStruct?(value);
                     }
                 }
             }
             return result;
         }
 
-        private GStruct18? findDoors(List<NavMeshDoorLink> list, [CanBeNull] GStruct18? exclude)
+        private DoorStruct? findDoors(List<NavMeshDoorLink> list, [CanBeNull] DoorStruct? exclude)
         {
-            GStruct18? result = null;
+            DoorStruct? result = null;
             float num = 6f;
             for (int i = 0; i < list.Count; i++)
             {
@@ -277,12 +279,12 @@ namespace SAIN.SAINComponent.Classes.Mover
                     {
                         num = sqrMagnitude;
                         this._currLink = navMeshDoorLink;
-                        GStruct18 value = new GStruct18
+                        DoorStruct value = new DoorStruct
                         {
                             LinkDoor = navMeshDoorLink,
                             CurDist = sqrMagnitude
                         };
-                        result = new GStruct18?(value);
+                        result = new DoorStruct?(value);
                     }
                 }
             }
@@ -308,7 +310,7 @@ namespace SAIN.SAINComponent.Classes.Mover
             {
                 return true;
             }
-            Vector3 vector = GClass760.Rotate90(gclass.a - gclass.b, 1);
+            Vector3 vector = GClass760.Rotate90(gclass.a - gclass.b, GClass760.SideTurn.right);
             if (Vector3.Dot(vector, this.BotOwner.LookDirection) < 0f)
             {
                 vector = -vector;
@@ -353,7 +355,7 @@ namespace SAIN.SAINComponent.Classes.Mover
         }
 
         // Token: 0x060010AF RID: 4271 RVA: 0x0004CED4 File Offset: 0x0004B0D4
-        public bool CheckWantToOpen(Vector3 goTo, GStruct18 infoStruct)
+        public bool CheckWantToOpen(Vector3 goTo, DoorStruct infoStruct)
         {
             NavMeshDoorLink linkDoor = infoStruct.LinkDoor;
             Vector3 vector = this.BotOwner.Transform.position + Vector3.up;

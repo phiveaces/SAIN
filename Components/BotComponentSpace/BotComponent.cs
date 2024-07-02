@@ -107,7 +107,7 @@ namespace SAIN.SAINComponent
             {
                 _slots.Add(Player.Equipment.GetSlot(slot));
             }
-            float result = Player.Equipment.method_11(_slots);
+            float result = Player.Equipment.method_10(_slots);
             _slots.Clear();
            // Logger.LogWarning(result);
             return result;
@@ -146,7 +146,7 @@ namespace SAIN.SAINComponent
 
             try
             {
-                person.Player.GClass2761_0.Inventory.TotalWeight = new GClass754<float>(new Func<float>(this.getBotTotalWeight));
+                person.Player.GClass2777_0.Inventory.TotalWeight = new GClass755<float>(new Func<float>(this.getBotTotalWeight));
                 person.Player.Physical.EncumberDisabled = false;
             }
             catch (Exception ex)

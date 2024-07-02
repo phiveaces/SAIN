@@ -1,6 +1,7 @@
 ﻿using Comfort.Common;
 using EFT;
 using EFT.Game.Spawning;
+using HarmonyLib;
 using SAIN.Components.PlayerComponentSpace;
 using SAIN.Helpers;
 using SAIN.Patches.Generic;
@@ -13,7 +14,7 @@ namespace SAIN.Components
 {
     public class GameWorldComponent : MonoBehaviour
     {
-        public bool WinterActive => WinterStatus == EWinterStatus.Winter;
+        public bool WinterActive => WinterStatus == ESeasonStatus.Winter;
 
         public static GameWorldComponent Instance { get; set; }
         public ELocation Location { get; private set; }
@@ -42,10 +43,10 @@ namespace SAIN.Components
             }
             _nextCheckWeatherTime = Time.time + 0.5f;
 
-            var weather = GameWorld.Class420_0;
+            var weather = (AccessTools.Field(typeof(GameWorld), "ginterface26_0").GetValue(GameWorld) as GInterface26);
             if (weather == null)
             {
-                WinterStatus = EWinterStatus.Summer;
+                WinterStatus = ESeasonStatus.Summer;
             }
             else
             {
@@ -134,7 +135,7 @@ namespace SAIN.Components
             return Location;
         }
 
-        public EWinterStatus WinterStatus { get; private set; }
+        public ESeasonStatus WinterStatus { get; private set; }
 
         private void findSpawnPointMarkers()
         {

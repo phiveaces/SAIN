@@ -1,4 +1,4 @@
-﻿using Aki.Reflection.Patching;
+﻿using SPT.Reflection.Patching;
 using Audio.Data;
 using Comfort.Common;
 using EFT;
@@ -37,7 +37,7 @@ namespace SAIN.Patches.Hearing
         }
 
         [PatchPostfix]
-        public static void Patch(Vector3 soundPosition, BetterSource source, GInterface94 player, SoundBank ____soundBank)
+        public static void Patch(Vector3 soundPosition, BetterSource source, GInterface106 player, SoundBank ____soundBank)
         {
             if (player.iPlayer != null)
             {
@@ -119,7 +119,7 @@ namespace SAIN.Patches.Hearing
 
         private static float calcVolume(Player player)
         {
-            return player.MovementContext.CovertMovementVolumeBySpeed * player.method_45();
+            return player.MovementContext.CovertMovementVolumeBySpeed * player.method_49();
         }
 
         private static float calcVolumeOld(Player player)
@@ -366,7 +366,7 @@ namespace SAIN.Patches.Hearing
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(Player), "method_40");
+            return AccessTools.Method(typeof(Player), "method_43");
         }
 
         [PatchPostfix]
@@ -405,7 +405,7 @@ namespace SAIN.Patches.Hearing
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(Player), "method_46");
+            return AccessTools.Method(typeof(Player), "method_50");
         }
 
         [PatchPrefix]
@@ -437,7 +437,7 @@ namespace SAIN.Patches.Hearing
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(Player), "SetInHands",
-                new[] { typeof(FoodClass), typeof(float), typeof(int), typeof(Callback<GInterface130>) });
+                new[] { typeof(FoodClass), typeof(float), typeof(int), typeof(Callback<GInterface142>) });
         }
 
         [PatchPrefix]
@@ -453,7 +453,7 @@ namespace SAIN.Patches.Hearing
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(Player), "SetInHands",
-                new[] { typeof(MedsClass), typeof(EBodyPart), typeof(int), typeof(Callback<GInterface130>) });
+                new[] { typeof(MedsClass), typeof(EBodyPart), typeof(int), typeof(Callback<GInterface142>) });
         }
 
         [PatchPrefix]

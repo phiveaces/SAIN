@@ -11,7 +11,7 @@
         public const string Trademark = "";
         public const string Culture = "";
 
-        public const int TarkovVersion = 29197;
+        public const int TarkovVersion = 30626;
 
         public const string EscapeFromTarkov = "EscapeFromTarkov.exe";
 
@@ -20,8 +20,8 @@
         public const string SAINVersion = "3.0.0";
         public const string SAINPresetVersion = "3.0.0";
 
-        public const string SPTGUID = "com.spt-aki.core";
-        public const string SPTVersion = "3.8.0";
+        public const string SPTGUID = "com.SPT.core";
+        public const string SPTVersion = "1.0.0.0";
 
         public const string WaypointsGUID = "xyz.drakia.waypoints";
         public const string WaypointsVersion = "1.4.0";

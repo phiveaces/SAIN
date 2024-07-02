@@ -1,12 +1,12 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/brace-style */
 
-import { ConfigTypes } from "@spt-aki/models/enums/ConfigTypes";
-import { IPostDBLoadMod } from "@spt-aki/models/external/IPostDBLoadMod";
-import { IPmcConfig } from "@spt-aki/models/spt/config/IPmcConfig";
-import { IBotConfig } from "@spt-aki/models/spt/config/IBotConfig";
-import { ConfigServer } from "@spt-aki/servers/ConfigServer";
-import { DatabaseServer } from "@spt-aki/servers/DatabaseServer";
+import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
+import { IPostDBLoadMod } from "@spt/models/external/IPostDBLoadMod";
+import { IPmcConfig } from "@spt/models/spt/config/IPmcConfig";
+import { IBotConfig } from "@spt/models/spt/config/IBotConfig";
+import { ConfigServer } from "@spt/servers/ConfigServer";
+import { DatabaseServer } from "@spt/servers/DatabaseServer";
 import { DependencyContainer } from "tsyringe";
 
 let botConfig: IBotConfig;

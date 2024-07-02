@@ -6,15 +6,15 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
-using EFTCore = GClass531;
-using EFTCoreContainer = GClass532;
+using EFTCore = GClass530;
+using EFTCoreContainer = GClass531;
 using EFTFileSettings = BotSettingsComponents;
 using EFTSettingsGroup = GClass458;
-using EFTStatModifiersClass = GClass529;
+using EFTStatModifiersClass = GClass528;
 using EFTTime = GClass1296;
 using EFTSearchPoint = PlaceForCheck;
-using Aki.Reflection.Patching;
-using Aki.Reflection.Utils;
+using SPT.Reflection.Patching;
+using SPT.Reflection.Utils;
 using System.Linq;
 
 ////////
@@ -27,7 +27,7 @@ namespace SAIN.Helpers
     {
         static HelpersGClass()
         {
-            InventoryControllerProp = AccessTools.Field(typeof(Player), "_inventoryController");
+            InventoryControllerField = AccessTools.Field(typeof(Player), "_inventoryController");
             EFTBotSettingsProp = AccessTools.Property(typeof(BotDifficultySettingsClass), "FileSettings");
             RefreshSettingsMethod = AccessTools.Method(typeof(BotDifficultySettingsClass), "method_0");
             PathControllerField = AccessTools.Field(typeof(BotMover), "_pathController");
@@ -44,7 +44,7 @@ namespace SAIN.Helpers
         private static readonly MethodInfo RefreshSettingsMethod;
 
         public static readonly PropertyInfo EFTBotSettingsProp;
-        public static readonly FieldInfo InventoryControllerProp;
+        public static readonly FieldInfo InventoryControllerField;
         public static readonly FieldInfo PathControllerField;
 
         public static BotSettingsComponents GetEFTSettings(WildSpawnType type, BotDifficulty difficulty)

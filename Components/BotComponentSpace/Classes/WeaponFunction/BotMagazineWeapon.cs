@@ -12,7 +12,7 @@ namespace SAIN.Components.BotComponentSpace.Classes
         public BotMagazineWeapon(Weapon weapon, BotComponent bot)
         {
             Weapon = weapon;
-            _inventoryController = bot.Player.GClass2761_0;
+            _inventoryController = bot.Player.GClass2777_0;
             _weaponManager = bot.BotOwner.WeaponManager;
             findMags();
             TryRefillAllMags();

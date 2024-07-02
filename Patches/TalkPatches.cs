@@ -1,4 +1,4 @@
-﻿using Aki.Reflection.Patching;
+﻿using SPT.Reflection.Patching;
 using EFT;
 using HarmonyLib;
 using SAIN.Components;
@@ -41,7 +41,7 @@ namespace SAIN.Patches.Talk
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(Player), "method_99");
+            return AccessTools.Method(typeof(Player), "method_102");
         }
 
         [PatchPrefix]

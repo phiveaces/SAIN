@@ -338,17 +338,17 @@ namespace SAIN.Components.BotController
 
         private void CheckTimeRemaining()
         {
-            TotalRaidTime = Aki.SinglePlayer.Utils.InRaid.RaidChangesUtil.OriginalEscapeTimeSeconds;
+            TotalRaidTime = SPT.SinglePlayer.Utils.InRaid.RaidChangesUtil.OriginalEscapeTimeSeconds;
 
-            //if (Aki.SinglePlayer.Utils.InRaid.RaidTimeUtil.HasRaidStarted())
+            //if (SPT.SinglePlayer.Utils.InRaid.RaidTimeUtil.HasRaidStarted())
             if (Singleton<AbstractGame>.Instance.GameTimer.Started())
             {
-                TimeRemaining = Aki.SinglePlayer.Utils.InRaid.RaidTimeUtil.GetRemainingRaidSeconds();
-                PercentageRemaining = Aki.SinglePlayer.Utils.InRaid.RaidTimeUtil.GetRaidTimeRemainingFraction() * 100;
+                TimeRemaining = SPT.SinglePlayer.Utils.InRaid.RaidTimeUtil.GetRemainingRaidSeconds();
+                PercentageRemaining = SPT.SinglePlayer.Utils.InRaid.RaidTimeUtil.GetRaidTimeRemainingFraction() * 100;
             }
             else
             {
-                TimeRemaining = Aki.SinglePlayer.Utils.InRaid.RaidChangesUtil.NewEscapeTimeSeconds;
+                TimeRemaining = SPT.SinglePlayer.Utils.InRaid.RaidChangesUtil.NewEscapeTimeSeconds;
                 PercentageRemaining = 100f * TimeRemaining / TotalRaidTime;
             }
         }

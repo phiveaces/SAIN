@@ -1,4 +1,4 @@
-﻿using Aki.Reflection.Patching;
+﻿using SPT.Reflection.Patching;
 using EFT;
 using EFT.InventoryLogic;
 using HarmonyLib;
@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using FollowerControllerClass = GClass435;
 
 namespace SAIN.Patches.Generic.Fixes
 {
@@ -102,7 +103,7 @@ namespace SAIN.Patches.Generic.Fixes
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GClass436), "method_4");
+            return AccessTools.Method(typeof(FollowerControllerClass), "method_4");
         }
 
         [PatchPrefix]

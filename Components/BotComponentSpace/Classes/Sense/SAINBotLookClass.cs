@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Found in Botowner.Looksensor
-using EnemyVisionCheck = GClass501;
-using LookAllData = GClass522;
+using EnemyVisionCheck = GClass500;
+using LookAllData = GClass521;
 
 namespace SAIN.SAINComponent.Classes
 {

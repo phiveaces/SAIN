@@ -1,4 +1,4 @@
-﻿using Aki.Reflection.Patching;
+﻿using SPT.Reflection.Patching;
 using EFT;
 using EFT.InventoryLogic;
 using HarmonyLib;
@@ -6,17 +6,15 @@ using SAIN.Components;
 using System.Reflection;
 using UnityEngine;
 using static SAIN.Helpers.Shoot;
+using BotWeaponControllerClass = GClass395;
 
 namespace SAIN.Patches.Shoot.RateOfFire
 {
     public class FullAutoPatch : ModulePatch
     {
-        private static PropertyInfo _ShootData;
-
         protected override MethodBase GetTargetMethod()
         {
-            _ShootData = AccessTools.Property(typeof(BotOwner), "ShootData");
-            return AccessTools.Method(_ShootData.PropertyType, "method_6");
+            return AccessTools.Method(typeof(ShootData), "method_6");
         }
 
         [PatchPrefix]
@@ -53,7 +51,7 @@ namespace SAIN.Patches.Shoot.RateOfFire
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GClass396), "method_1");
+            return AccessTools.Method(typeof(BotWeaponControllerClass), "method_1");
         }
 
         [PatchPostfix]
@@ -74,7 +72,7 @@ namespace SAIN.Patches.Shoot.RateOfFire
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GClass396), "method_6");
+            return AccessTools.Method(typeof(BotWeaponControllerClass), "method_6");
         }
 
         [PatchPostfix]
@@ -95,7 +93,7 @@ namespace SAIN.Patches.Shoot.RateOfFire
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GClass396), "method_0");
+            return AccessTools.Method(typeof(BotWeaponControllerClass), "method_0");
         }
 
         [PatchPostfix]
