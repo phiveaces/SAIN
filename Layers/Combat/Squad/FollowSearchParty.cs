@@ -70,7 +70,7 @@ namespace SAIN.Layers.Combat.Squad
             }
 
             if (moveDistance > 20f * 20f &&
-                Bot.Mover.SprintController.RunToPoint(movePosition.Value, SAINComponent.Classes.Mover.ESprintUrgency.Middle))
+                Bot.Mover.SprintController.RunToPoint(movePosition.Value, SAINComponent.Classes.Mover.ESprintUrgency.Middle, true))
             {
                 nextUpdateTime = 2f;
                 return;
@@ -121,7 +121,7 @@ namespace SAIN.Layers.Combat.Squad
         {
             Toggle(false);
             _enemy = null;
-            Bot.Mover.SprintController.CancelRun();
+            Bot.Mover.SprintController.CancelRun(0.25f);
         }
     }
 }

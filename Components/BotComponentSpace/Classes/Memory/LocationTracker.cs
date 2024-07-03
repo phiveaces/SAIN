@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Memory
 {
-    public class LocationTracker : BotBaseClass, ISAINClass
+    public class LocationTracker : BotBase, IBotClass
     {
         public Collider BotZoneCollider => BotZone?.Collider;
         public AIPlaceInfo BotZone => BotOwner.AIData.PlaceInfo;

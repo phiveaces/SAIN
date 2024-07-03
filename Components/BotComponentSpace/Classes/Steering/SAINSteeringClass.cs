@@ -10,7 +10,7 @@ using Random = UnityEngine.Random;
 
 namespace SAIN.SAINComponent.Classes.Mover
 {
-    public class SAINSteeringClass : BotBaseClass, ISAINClass
+    public class SAINSteeringClass : BotBase, IBotClass
     {
         public SteerPriority CurrentSteerPriority => _steerPriorityClass.CurrentSteerPriority;
         public SteerPriority LastSteerPriority => _steerPriorityClass.LastSteerPriority;
@@ -18,9 +18,9 @@ namespace SAIN.SAINComponent.Classes.Mover
         public Vector3 WeaponRootOffset => BotOwner.WeaponRoot.position - Bot.Position;
         public AimStatus AimStatus => _steerPriorityClass.AimStatus;
 
-        public bool SteerByPriority(bool lookRandom = true)
+        public bool SteerByPriority(bool lookRandom = true, bool ignoreRunningPath = false)
         {
-            switch (_steerPriorityClass.GetCurrentSteerPriority(lookRandom))
+            switch (_steerPriorityClass.GetCurrentSteerPriority(lookRandom, ignoreRunningPath))
             {
                 case SteerPriority.RunningPath:
                 case SteerPriority.Aiming:
@@ -149,7 +149,7 @@ namespace SAIN.SAINComponent.Classes.Mover
                 direction.y = 0f;
             }
             Vector3 pos = BotOwner.WeaponRoot.position + direction.normalized;
-            LookToPoint(pos, -1f);
+            LookToPoint(pos, rotateSpeed);
         }
 
         public void LookToEnemy(Enemy enemy)
@@ -189,7 +189,7 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(UpdatePresetSettings);
+            base.SubscribeToPreset(UpdatePresetSettings);
         }
 
         public void Update()

@@ -121,8 +121,8 @@ namespace SAIN
         private float lastCalcTime;
 
         public readonly Weapon Weapon;
-        public readonly IWeaponClass WeaponClass;
-        public readonly ICaliber AmmoCaliber;
+        public readonly EWeaponClass WeaponClass;
+        public readonly ECaliber AmmoCaliber;
 
         public float CalculatedAudibleRange { get; private set; }
         private float lastCalculatedRange;
@@ -286,22 +286,22 @@ namespace SAIN
         public static readonly string OpticScopeTypeId = "55818ae44bdc2dde698b456c";
         public static readonly string SpecialScopeTypeId = "55818aeb4bdc2ddc698b456a";
 
-        private static IWeaponClass TryGetWeaponClass(Weapon weapon)
+        private static EWeaponClass TryGetWeaponClass(Weapon weapon)
         {
-            IWeaponClass WeaponClass = EnumValues.TryParse<IWeaponClass>(weapon.Template.weapClass);
+            EWeaponClass WeaponClass = EnumValues.TryParse<EWeaponClass>(weapon.Template.weapClass);
             if (WeaponClass == default)
             {
-                WeaponClass = EnumValues.TryParse<IWeaponClass>(weapon.WeapClass);
+                WeaponClass = EnumValues.TryParse<EWeaponClass>(weapon.WeapClass);
             }
             return WeaponClass;
         }
 
-        private static ICaliber TryGetAmmoCaliber(Weapon weapon)
+        private static ECaliber TryGetAmmoCaliber(Weapon weapon)
         {
-            ICaliber caliber = EnumValues.TryParse<ICaliber>(weapon.Template.ammoCaliber);
+            ECaliber caliber = EnumValues.TryParse<ECaliber>(weapon.Template.ammoCaliber);
             if (caliber == default)
             {
-                caliber = EnumValues.TryParse<ICaliber>(weapon.AmmoCaliber);
+                caliber = EnumValues.TryParse<ECaliber>(weapon.AmmoCaliber);
             }
             return caliber;
         }

@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.EnemyClasses
 {
-    public class EnemyVisionChecker : EnemyBase, ISAINClass
+    public class EnemyVisionChecker : EnemyBase, IBotClass
     {
         public Vector3 LastSeenPoint { get; private set; }
         public bool LineOfSight => EnemyParts.LineOfSight;
@@ -29,7 +29,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
             EnemyParts.Update();
             if (Enemy.Events.OnEnemyLineOfSightChanged.CheckToggle(LineOfSight))
             {
-                Logger.LogDebug($"los changed");
+                //Logger.LogDebug($"los changed");
             }
         }
 
@@ -66,12 +66,21 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
             {
                 return true;
             }
+
+            float headMaxRange = Mathf.Clamp(maxRange, 0f, 100f);
+
+            if (!Enemy.IsAI && 
+                EnemyParts.CheckHeadLineOfSight(lookPoint, headMaxRange, out seenPosition))
+            {
+                return true;
+            }
             if (EnemyParts.CheckRandomPartLineOfSight(lookPoint, maxRange, out seenPosition))
             {
                 return true;
             }
             // Do an extra check if the bot has this enemy as their active primary enemy or the enemy is not AI
-            if (Enemy.IsCurrentEnemy && !Enemy.IsAI &&
+            if (Enemy.IsCurrentEnemy && 
+                !Enemy.IsAI &&
                 EnemyParts.CheckRandomPartLineOfSight(lookPoint, maxRange, out seenPosition))
             {
                 return true;

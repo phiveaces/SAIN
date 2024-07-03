@@ -39,6 +39,30 @@ namespace SAIN.Components.PlayerComponentSpace.PersonClasses
             }
         }
 
+        public void Disable()
+        {
+            bool wasGameObjectActive = GameObjectActive;
+            GameObjectActive = false;
+            if (wasGameObjectActive != GameObjectActive)
+            {
+                OnGameObjectActiveChanged?.Invoke(GameObjectActive);
+            }
+
+            bool wasActive = PlayerActive;
+            PlayerActive = false;
+            if (wasActive != PlayerActive)
+            {
+                OnPlayerActiveChanged?.Invoke(PlayerActive);
+            }
+
+            bool wasAIActive = BotActive;
+            BotActive = false;
+            if (wasAIActive != BotActive)
+            {
+                OnBotActiveChanged?.Invoke(BotActive);
+            }
+        }
+
         private void botStateChanged(EBotState state)
         {
             if (state == EBotState.Disposed)
@@ -103,6 +127,10 @@ namespace SAIN.Components.PlayerComponentSpace.PersonClasses
         {
             GameObject gameObject = _person.GameObject;
             if (gameObject == null)
+            {
+                return false;
+            }
+            if (!_person.Player.isActiveAndEnabled)
             {
                 return false;
             }

@@ -253,6 +253,11 @@
     <Compile Include="Components\BotComponentSpace\Classes\EnemyClasses\SAINEnemyParts.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\EnemyControllers\EnemyControllerEvents.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\EnemyControllers\EnemyListController.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Mover\ObstacleAgent.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\HearingAnalysisClass.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\HearingBulletAnalysisClass.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\HearingDispersionClass.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\HearingInputClass.cs" />
     <Compile Include="Helpers\Events\ToggleEvent.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\EnemyControllers\EnemyChooserClass.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\EnemyClasses\CornerHelpers.cs" />
@@ -271,10 +276,10 @@
     <Compile Include="Components\BotComponentSpace\Classes\EnemyClasses\EnemyHearing.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\EnemyClasses\EnemyKnownChecker.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Info\WeaponAIPresetHistory.cs" />
-    <Compile Include="Components\BotComponentSpace\Classes\Sense\DispersionDictionary.cs" />
-    <Compile Include="Components\BotComponentSpace\Classes\Sense\DispersionValues.cs" />
-    <Compile Include="Components\BotComponentSpace\Classes\Sense\ESoundDispersionType.cs" />
-    <Compile Include="Components\BotComponentSpace\Classes\Sense\SoundDispersionClass.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\DispersionDictionary.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\DispersionValues.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\ESoundDispersionType.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\SoundDispersionClass.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Steering\EEnemySteerDir.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Steering\HeardSoundSteeringClass.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Steering\RandomLookClass.cs" />
@@ -284,7 +289,7 @@
     <Compile Include="Components\BotComponentSpace\Classes\Search\SearchDeciderClass.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Search\SearchPathFinder.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Search\SearchReasonsStruct.cs" />
-    <Compile Include="Components\BotComponentSpace\Classes\Sense\BotSound.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\BotSound.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Steering\SteerPriorityClass.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\WeaponFunction\BotMagazineWeapon.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\WeaponFunction\MagRefillClass.cs" />
@@ -310,6 +315,7 @@
     <Compile Include="Components\PlayerComponentSpace\PersonClasses\PersonActiveClass.cs" />
     <Compile Include="Helpers\PerformanceHelpers.cs" />
     <Compile Include="Layers\Combat\Solo\MeleeAttackAction.cs" />
+    <Compile Include="Layers\Debug\CrawlAction.cs" />
     <Compile Include="Layers\ISAINAction.cs" />
     <Compile Include="Patches\FixPatches.cs" />
     <Compile Include="Patches\Shoot\AimDataPatches.cs" />
@@ -362,8 +368,8 @@
     <Compile Include="Layers\DebugOverlay.cs" />
     <Compile Include="Layers\Extract\LootingBotsInterop.cs" />
     <Compile Include="Layers\Extract\SAINLootingBotsIntegration.cs" />
-    <Compile Include="Layers\Run\BotRunLayer.cs" />
-    <Compile Include="Layers\Run\RunningAction.cs" />
+    <Compile Include="Layers\Debug\DebugLayer.cs" />
+    <Compile Include="Layers\Debug\RunningAction.cs" />
     <Compile Include="Layers\SAINAction.cs" />
     <Compile Include="Layers\SAINLayer.cs" />
     <Compile Include="Layers\Unstuck\BotUnstuckLayer.cs" />
@@ -457,7 +463,7 @@
     <Compile Include="Components\BotComponentSpace\Classes\Search\SAINSearchClass.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Sense\SAINConcealment.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Sense\SAINBotSpaceAwareness.cs" />
-    <Compile Include="Components\BotComponentSpace\Classes\Sense\SAINSoundCollection.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\SAINSoundCollection.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\WeaponFunction\BotLightController.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\WeaponFunction\ManualShootClass.cs" />
     <Compile Include="Components\BotComponentSpace\ESAINLayer.cs" />
@@ -555,7 +561,7 @@
     <Compile Include="Components\BotComponentSpace\Classes\Mover\SAINMoverClass.cs" />
     <Compile Include="Components\BotComponentSpace\SubComponents\CoverFinder\CoverPointClass.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Decision\SAINDecisionClass.cs" />
-    <Compile Include="Components\BotComponentSpace\Classes\Sense\SAINHearingSensorClass.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\SAINHearingSensorClass.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Search\BotPeekPlan.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Decision\SquadDecisionClass.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Talk\SquadLeaderClass.cs" />
@@ -611,7 +617,7 @@
     <Compile Include="Patches\GenericPatches.cs" />
     <Compile Include="Plugin\SAINPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Components\BotComponentSpace\BotBaseClass.cs" />
+    <Compile Include="Components\BotComponentSpace\BotBase.cs" />
     <Compile Include="Plugin\VersionChecker\VersionChecker.cs" />
     <Compile Include="Preset\GlobalSettings\Categories\ShootSettings.cs" />
     <Compile Include="Preset\GlobalSettings\Categories\LookSettings.cs" />

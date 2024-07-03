@@ -5,7 +5,7 @@ using UnityEngine.AI;
 
 namespace SAIN.SAINComponent.Classes.Mover
 {
-    public class HeardSoundSteeringClass : BotSubClassBase<SAINSteeringClass>
+    public class HeardSoundSteeringClass : BotSubClass<SAINSteeringClass>
     {
         public HeardSoundSteeringClass(SAINSteeringClass steering) : base(steering)
         {

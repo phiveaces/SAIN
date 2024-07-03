@@ -4,11 +4,12 @@ using SAIN.Components.PlayerComponentSpace;
 using SAIN.Components.PlayerComponentSpace.PersonClasses;
 using SAIN.Helpers;
 using SAIN.Preset;
+using System;
 using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.EnemyClasses
 {
-    public class Enemy : BotBaseClass, ISAINClass
+    public class Enemy : BotBase, IBotClass
     {
         public string EnemyName { get; }
         public string EnemyProfileId { get; }
@@ -35,6 +36,8 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
         private EnemyActiveThreatChecker _activeThreatChecker { get; }
         private EnemyValidChecker _validChecker { get; }
 
+        public event Action OnEnemyDisposed;
+
         public Enemy(BotComponent bot, PlayerComponent playerComponent, EnemyInfo enemyInfo) : base(bot)
         {
             EnemyPlayerComponent = playerComponent;
@@ -58,7 +61,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(updatePresetSettings);
+            base.SubscribeToPreset(updatePresetSettings);
 
             Events.Init();
             _validChecker.Init();
@@ -74,13 +77,13 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
         public void Update()
         {
             IsCurrentEnemy = Bot.Enemy?.EnemyProfileId == EnemyProfileId;
+            updateRealDistance();
 
             Events.Update();
             _validChecker.Update();
             _knownChecker.Update();
             _activeThreatChecker.Update();
 
-            updateRealDistance();
             updateActiveState();
 
             Vision.Update();
@@ -91,7 +94,8 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
 
         public void Dispose()
         {
-            base.UnSubscribeToPresetChanges();
+            OnEnemyDisposed?.Invoke();
+
             Events?.Dispose();
             _validChecker?.Dispose();
             _knownChecker?.Dispose();
@@ -213,14 +217,40 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
         public Player EnemyPlayer => EnemyPlayerComponent.Player;
 
         public Vector3? LastKnownPosition => KnownPlaces.LastKnownPosition;
-        public float TimeSinceLastKnownUpdated => KnownPlaces.TimeSinceLastKnownUpdated;
-        public Vector3 EnemyMoveDirection => EnemyPlayer.MovementContext.MovementDirection;
 
+        public Vector3 EnemyMoveDirection
+        {
+            get
+            {
+                if (_nextCalcMoveDirTime < Time.time)
+                {
+                    _nextCalcMoveDirTime = Time.time + 0.1f;
+                    Vector2 moveDirV2 = EnemyPlayer.MovementContext.MovementDirection;
+                    Vector3 moveDirection = new Vector3(moveDirV2.x, 0, moveDirV2.y);
+                    if (EnemyTransform.VelocityMagnitudeNormal > 0.01f)
+                    {
+                        LastMoveDirection = moveDirection;
+                        if (EnemyPlayer.IsSprintEnabled)
+                        {
+                            LastSprintDirection = moveDirection;
+                        }
+                    }
+                    _moveDirection = moveDirection;
+                }
+                return _moveDirection;
+            }
+        }
 
+        private Vector3 _moveDirection;
+        private float _nextCalcMoveDirTime;
+
+        public Vector3 LastMoveDirection { get; private set; }
+        public Vector3 LastSprintDirection { get; private set; }
         public Vector3 EnemyPosition => EnemyTransform.Position;
         public Vector3 EnemyDirection => EnemyTransform.DirectionToMe(Bot.Transform.Position);
         public Vector3 EnemyHeadPosition => EnemyTransform.HeadPosition;
 
+        public float TimeSinceLastKnownUpdated => KnownPlaces.TimeSinceLastKnownUpdated;
         public bool InLineOfSight => Vision.InLineOfSight;
         public bool IsVisible => Vision.IsVisible;
         public bool CanShoot => Vision.CanShoot;
@@ -233,26 +263,73 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
 
         private void updateRealDistance()
         {
-            float timeAdd;
-            if (IsCurrentEnemy)
-            {
-                timeAdd = 0.05f;
-            }
-            else if (EnemyKnown)
-            {
-                timeAdd = IsAI ? 0.5f : 0.2f;
-            }
-            else
-            {
-                timeAdd = IsAI ? 1f : 0.33f;
-            }
-
+            float timeAdd = calcMagnitudeDelay();
             if (_lastUpdateDistanceTime + timeAdd < Time.time)
             {
                 _lastUpdateDistanceTime = Time.time;
-                RealDistance = (EnemyPlayerComponent.Position - Bot.Position).magnitude;
+                RealDistance = (EnemyPosition - Bot.Position).magnitude;
             }
         }
+
+        private float calcMagnitudeDelay()
+        {
+            float baseTime;
+            if (IsCurrentEnemy)
+                baseTime = IsAI ? ENEMY_DISTANCE_UPDATE_CURRENTENEMY_AI : ENEMY_DISTANCE_UPDATE_CURRENTENEMY;
+            else if (EnemyKnown)
+                baseTime = IsAI ? ENEMY_DISTANCE_UPDATE_ENEMYKNOWN_AI : ENEMY_DISTANCE_UPDATE_ENEMYKNOWN;
+            else
+                baseTime = IsAI ? ENEMY_DISTANCE_UPDATE_UNKNOWN_AI : ENEMY_DISTANCE_UPDATE_UNKNOWN;
+
+            float result = baseTime * UpdateFrequencyCoef;
+            return result;
+        }
+
+        public float UpdateFrequencyCoef
+        {
+            get
+            {
+                if (_nextUpdateCoefTime < Time.time)
+                {
+                    _nextUpdateCoefTime = Time.time + 0.1f;
+                    _updateCoef = calcUpdateFrequencyCoef();
+                }
+                return _updateCoef;
+            }
+        }
+
+
+        private float calcUpdateFrequencyCoef()
+        {
+            float enemyDist = RealDistance;
+            float min = ENEMY_UPDATEFREQUENCY_MIN_DIST;
+            if (enemyDist <= min)
+            {
+                return 1f;
+            }
+            float max = ENEMY_UPDATEFREQUENCY_MAX_DIST;
+            if (enemyDist >= max)
+            {
+                return max;
+            }
+
+            float num = max - min;
+            float num2 = enemyDist - min;
+            float ratio = num2 / num;
+            float result = Mathf.Lerp(1f, ENEMY_UPDATEFREQUENCY_MAX_SCALE, ratio);
+            return result;
+        }
+
+        private const float ENEMY_DISTANCE_UPDATE_CURRENTENEMY = 0.05f;
+        private const float ENEMY_DISTANCE_UPDATE_CURRENTENEMY_AI = 0.1f;
+        private const float ENEMY_DISTANCE_UPDATE_ENEMYKNOWN = 0.1f;
+        private const float ENEMY_DISTANCE_UPDATE_ENEMYKNOWN_AI = 0.33f;
+        private const float ENEMY_DISTANCE_UPDATE_UNKNOWN = 0.5f;
+        private const float ENEMY_DISTANCE_UPDATE_UNKNOWN_AI = 1f;
+        private const float ENEMY_UPDATEFREQUENCY_MAX_SCALE = 5f;
+        private const float ENEMY_UPDATEFREQUENCY_MAX_DIST = 500f;
+        private const float ENEMY_UPDATEFREQUENCY_MIN_DIST = 100f;
+
 
         private void updateActiveState()
         {
@@ -328,6 +405,8 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
 
         public float NextCheckFlashLightTime;
 
+        private float _updateCoef = 1f;
+        private float _nextUpdateCoefTime;
         private bool _hasBeenActive;
         private Vector3? _centerMass;
         private float _nextGetCenterTime;

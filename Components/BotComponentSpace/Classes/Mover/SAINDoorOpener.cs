@@ -36,13 +36,14 @@ namespace SAIN.SAINComponent.Classes.Mover
         public bool Update()
         {
             if (!SAINPlugin.LoadedPreset.GlobalSettings.General.NewDoorOpening ||
-                !Bot.HasEnemy)
+                Bot.EnemyController.AtPeace == true)
             {
                 return BotOwner.DoorOpener.Update();
             }
 
             if (BotOwner.DoorOpener.Interacting)
             {
+                BotOwner.Steering.LookToDirection(Bot.LookDirection);
                 //this.BotOwner.Steering.SetYAngle(0f);
                 if (this._traversingEnd < Time.time)
                 {
@@ -135,9 +136,21 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         private bool shallKickOpen(Door door, EInteractionType Etype)
         {
-            if (Bot.Info.PersonalitySettings.General.KickOpenAllDoors &&
-                Etype == EInteractionType.Open &&
-                Bot.Enemy != null)
+            if (Bot.Enemy == null)
+            {
+                return false;
+            }
+            if (Etype != EInteractionType.Open)
+            {
+                return false;
+            }
+
+            bool shallKick = Bot.Info.PersonalitySettings.General.KickOpenAllDoors;
+            if (!shallKick)
+            {
+                shallKick = Bot.Enemy.TimeSinceSeen < 1f;
+            }
+            if (shallKick)
             {
                 var breakInParameters = door.GetBreakInParameters(Bot.Position);
                 return door.BreachSuccessRoll(breakInParameters.InteractionPosition);
@@ -232,6 +245,7 @@ namespace SAIN.SAINComponent.Classes.Mover
                 if (navMeshDoorLink.Door.DoorState == EDoorState.Open)
                 {
                     a = navMeshDoorLink.MidClose;
+                    num = 1f;
                 }
                 else
                 {
@@ -350,7 +364,7 @@ namespace SAIN.SAINComponent.Classes.Mover
                 }
                 return;
             }
-            _nextPosibleDoorOpenTime = Time.time + 3f;
+            _nextPosibleDoorOpenTime = Time.time + 4f;
             Interact(_currentDoor, EInteractionType.Open);
         }
 

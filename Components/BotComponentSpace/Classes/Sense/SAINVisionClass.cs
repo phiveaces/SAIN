@@ -2,7 +2,7 @@
 
 namespace SAIN.SAINComponent.Classes
 {
-    public class SAINVisionClass : BotBaseClass, ISAINClass
+    public class SAINVisionClass : BotBase, IBotClass
     {
         public SAINVisionClass(BotComponent component) : base(component)
         {

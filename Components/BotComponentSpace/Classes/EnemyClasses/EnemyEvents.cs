@@ -4,7 +4,7 @@ using UnityEngine.AI;
 
 namespace SAIN.SAINComponent.Classes.EnemyClasses
 {
-    public class EnemyEvents : EnemyBase, ISAINClass
+    public class EnemyEvents : EnemyBase, IBotClass
     {
         public EnemyToggleEvent OnEnemyLineOfSightChanged { get; }
         public EnemyToggleEvent OnEnemyKnownChanged { get; }

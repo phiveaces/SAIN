@@ -84,8 +84,8 @@ namespace SAIN.Helpers
         public static readonly BotDifficulty[] Difficulties = { BotDifficulty.easy, BotDifficulty.normal, BotDifficulty.hard, BotDifficulty.impossible };
         public static readonly WildSpawnType[] WildSpawnTypes = GetEnum<WildSpawnType>();
 
-        public static readonly ICaliber[] AmmoCalibers = GetEnum<ICaliber>();
-        public static readonly IWeaponClass[] WeaponClasses = GetEnum<IWeaponClass>();
+        public static readonly ECaliber[] AmmoCalibers = GetEnum<ECaliber>();
+        public static readonly EWeaponClass[] WeaponClasses = GetEnum<EWeaponClass>();
 
         public static readonly EPersonality[] Personalities = GetEnum<EPersonality>();
 
@@ -93,24 +93,24 @@ namespace SAIN.Helpers
         public static readonly SquadDecision[] SquadDecisions = GetEnum<SquadDecision>();
         public static readonly SelfDecision[] SelfDecisions = GetEnum<SelfDecision>();
 
-        public static ICaliber ParseCaliber(string caliber)
+        public static ECaliber ParseCaliber(string caliber)
         {
-            if (Enum.TryParse(caliber, out ICaliber result))
+            if (Enum.TryParse(caliber, out ECaliber result))
             {
                 return result;
             }
             Logger.LogError($"Caliber [{caliber}] does not exist in Caliber Enum!");
-            return ICaliber.Default;
+            return ECaliber.Default;
         }
 
-        public static IWeaponClass ParseWeaponClass(string weaponClass)
+        public static EWeaponClass ParseWeaponClass(string weaponClass)
         {
-            if (Enum.TryParse(weaponClass, out IWeaponClass result))
+            if (Enum.TryParse(weaponClass, out EWeaponClass result))
             {
                 return result;
             }
             Logger.LogError($"Weapon Class [{weaponClass}] does not exist in IWeaponClass Enum!");
-            return IWeaponClass.Default;
+            return EWeaponClass.Default;
         }
 
         public static T TryParse<T>(string _string) where T : struct, Enum

@@ -9,7 +9,7 @@ using SAIN.SAINComponent.Classes.Info;
 
 namespace SAIN.SAINComponent.Classes.WeaponFunction
 {
-    public class Firemode : BotBaseClass, ISAINClass
+    public class Firemode : BotBase, IBotClass
     {
         public Firemode(BotComponent sain) : base(sain)
         {
@@ -39,7 +39,7 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
         private bool checkSwapMachineGun()
         {
             if (Bot.ManualShoot.Reason != EShootReason.None
-                && Bot.Info.WeaponInfo.IWeaponClass == IWeaponClass.machinegun
+                && Bot.Info.WeaponInfo.EWeaponClass == EWeaponClass.machinegun
                 && CanSetMode(EFireMode.fullauto))
             {
                 SetFireMode(EFireMode.fullauto);

@@ -43,7 +43,7 @@ namespace SAIN.Layers.Combat.Squad
                         _manualShooting = true;
                         Bot.Mover.StopMove();
 
-                        bool hasMachineGun = Bot.Info.WeaponInfo.IWeaponClass == IWeaponClass.machinegun;
+                        bool hasMachineGun = Bot.Info.WeaponInfo.EWeaponClass == EWeaponClass.machinegun;
                         if (hasMachineGun
                             && Bot.Mover.Prone.ShallProne(true))
                         {

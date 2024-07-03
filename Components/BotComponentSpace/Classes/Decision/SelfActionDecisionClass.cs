@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Decision
 {
-    public class SelfActionDecisionClass : BotBaseClass, ISAINClass
+    public class SelfActionDecisionClass : BotBase, IBotClass
     {
         public SelfActionDecisionClass(BotComponent sain) : base(sain)
         {
@@ -13,7 +13,7 @@ namespace SAIN.SAINComponent.Classes.Decision
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
         }
 
         public void Update()

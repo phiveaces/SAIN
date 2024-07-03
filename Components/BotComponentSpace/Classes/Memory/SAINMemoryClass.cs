@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Memory
 {
-    public class SAINMemoryClass : BotBaseClass, ISAINClass
+    public class SAINMemoryClass : BotBase, IBotClass
     {
         public IPlayer LastUnderFireSource { get; private set; }
         public Enemy LastUnderFireEnemy { get; private set; }

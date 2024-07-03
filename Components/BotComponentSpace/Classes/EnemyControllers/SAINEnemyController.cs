@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.EnemyClasses
 {
-    public class SAINEnemyController : BotBaseClass, ISAINClass
+    public class SAINEnemyController : BotBase, IBotClass
     {
         public Dictionary<string, Enemy> Enemies => _listController.Enemies;
         public EnemyControllerEvents Events { get; }

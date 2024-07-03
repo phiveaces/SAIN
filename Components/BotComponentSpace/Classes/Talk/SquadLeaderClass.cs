@@ -12,7 +12,7 @@ using SAIN.SAINComponent;
 
 namespace SAIN.SAINComponent.Classes.Talk
 {
-    public class SquadLeaderClass : BotBaseClass
+    public class SquadLeaderClass : BotBase
     {
         public SquadLeaderClass(BotComponent owner) : base(owner)
         {

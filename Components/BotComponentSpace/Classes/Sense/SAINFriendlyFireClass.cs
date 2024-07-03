@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes
 {
-    public class SAINFriendlyFireClass : BotBaseClass, ISAINClass
+    public class SAINFriendlyFireClass : BotBase, IBotClass
     {
         public bool ClearShot => FriendlyFireStatus != FriendlyFireStatus.FriendlyBlock;
         public FriendlyFireStatus FriendlyFireStatus { get; private set; }
@@ -16,7 +16,7 @@ namespace SAIN.SAINComponent.Classes
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
         }
 
         public void Update()

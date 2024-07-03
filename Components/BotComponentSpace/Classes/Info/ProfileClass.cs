@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Info
 {
-    public class ProfileClass : BotBaseClass
+    public class ProfileClass : BotBase
     {
         public ProfileClass(BotComponent sain) : base(sain)
         {

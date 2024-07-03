@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace SAIN.SAINComponent.Classes.WeaponFunction
 {
-    public class AimClass : BotBaseClass, ISAINClass
+    public class AimClass : BotBase, IBotClass
     {
         public event Action<bool> OnAimAllowedOrBlocked;
 

@@ -3,7 +3,7 @@ using Random = UnityEngine.Random;
 
 namespace SAIN.SAINComponent.Classes.Mover
 {
-    public class RandomLookClass : BotSubClassBase<SAINSteeringClass>
+    public class RandomLookClass : BotSubClass<SAINSteeringClass>
     {
         public RandomLookClass(SAINSteeringClass steeringClass) : base(steeringClass) { }
 

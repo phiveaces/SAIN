@@ -11,6 +11,9 @@ namespace SAIN.Preset.GlobalSettings
         [Name("Test Bot Sprint Pathfinder")]
         public bool ForceBotsToRunAround;
 
+        [Name("Test Bot Crawling")]
+        public bool ForceBotsToTryCrawl;
+
         [Name("Draw Debug Gizmos")]
         public bool DrawDebugGizmos;
 

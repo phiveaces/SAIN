@@ -2,7 +2,7 @@
 
 namespace SAIN.SAINComponent.Classes
 {
-    public class BodyPartHitEffectClass : BotMedicalBase, ISAINClass
+    public class BodyPartHitEffectClass : BotMedicalBase, IBotClass
     {
         public EInjurySeverity LeftArmInjury { get; private set; }
         public EInjurySeverity RightArmInjury { get; private set; }

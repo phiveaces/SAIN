@@ -4,7 +4,7 @@ using UnityEngine.AI;
 
 namespace SAIN.SAINComponent.Classes.Mover
 {
-    public class JumpClass : BotBaseClass, ISAINClass
+    public class JumpClass : BotBase, IBotClass
     {
         public JumpClass(BotComponent sain) : base(sain)
         {

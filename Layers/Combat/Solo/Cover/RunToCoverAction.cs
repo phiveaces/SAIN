@@ -128,6 +128,12 @@ namespace SAIN.Layers.Combat.Solo.Cover
 
         private bool moveToCover(out bool sprinting, out CoverPoint coverDestination, bool tryWalk)
         {
+            if (Bot.Mover.SprintController.Running && Bot.Mover.SprintController.Canceling)
+            {
+                sprinting = true;
+                coverDestination = null;
+                return false;
+            }
             if (tryRun(Bot.Cover.CoverInUse, out sprinting, tryWalk))
             {
                 coverDestination = Bot.Cover.CoverInUse;
@@ -226,7 +232,7 @@ namespace SAIN.Layers.Combat.Solo.Cover
 
             if (!tryWalk &&
                 coverPoint.PathLength >= Bot.Info.FileSettings.Move.RUN_TO_COVER_MIN && 
-                Bot.Mover.SprintController.RunToPoint(destination, getUrgency()))
+                Bot.Mover.SprintController.RunToPoint(destination, getUrgency(), false))
             {
                 sprinting = true;
                 return true;
@@ -263,7 +269,7 @@ namespace SAIN.Layers.Combat.Solo.Cover
                 Bot.Talk.TalkAfterDelay(EPhraseTrigger.OnEnemyGrenade, ETagStatus.Combat, 0.33f);
             }
 
-            Bot.Mover.SprintController.CancelRun();
+            Bot.Mover.SprintController.CancelRun(0.25f);
             _recalcMoveTimer = 0f;
             _shallJumpToCover = false;
             _sprinting = false;
@@ -275,7 +281,7 @@ namespace SAIN.Layers.Combat.Solo.Cover
             Toggle(false);
 
             Bot.Mover.DogFight.ResetDogFightStatus();
-            Bot.Mover.SprintController.CancelRun();
+            Bot.Mover.SprintController.CancelRun(0.25f);
             Bot.Cover.CheckResetCoverInUse();
             Bot.Mover.Sprint(false);
         }

@@ -8,14 +8,14 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Sense
 {
-    public class SAINConcealment : BotBaseClass, ISAINClass
+    public class SAINConcealment : BotBase, IBotClass
     {
         public SAINConcealment(BotComponent sain) : base(sain)
         {
         }
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
         }
 
         public void Update()

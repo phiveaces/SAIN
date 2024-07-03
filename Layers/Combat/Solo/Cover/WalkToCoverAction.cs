@@ -176,7 +176,7 @@ namespace SAIN.Layers.Combat.Solo.Cover
             Bot.Enemy.Status.EnemyIsSuppressed = true;
 
             float timeAdd;
-            if (Bot.Info.WeaponInfo.IWeaponClass == IWeaponClass.machinegun)
+            if (Bot.Info.WeaponInfo.EWeaponClass == EWeaponClass.machinegun)
             {
                 timeAdd = 0.05f * Random.Range(0.75f, 1.25f);
             }

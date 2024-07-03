@@ -26,7 +26,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
                 {
                     return float.MaxValue;
                 }
-                return LastKnownPlace.Distance(EnemyPosition);
+                return LastKnownPlace.Distance(EnemyCurrentPosition);
             }
         }
 
@@ -38,7 +38,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
                 {
                     return float.MaxValue;
                 }
-                return LastSeenPlace.Distance(EnemyPosition);
+                return LastSeenPlace.Distance(EnemyCurrentPosition);
             }
         }
 
@@ -50,7 +50,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
                 {
                     return float.MaxValue;
                 }
-                return LastHeardPlace.Distance(EnemyPosition);
+                return LastHeardPlace.Distance(EnemyCurrentPosition);
             }
         }
 

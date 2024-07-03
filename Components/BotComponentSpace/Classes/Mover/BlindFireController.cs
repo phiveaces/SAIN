@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Mover
 {
-    public class BlindFireController : BotBaseClass, ISAINClass
+    public class BlindFireController : BotBase, IBotClass
     {
         public BlindFireController(BotComponent sain) : base(sain)
         {
@@ -15,7 +15,7 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
         }
 
         private bool checkAllowBlindFire()

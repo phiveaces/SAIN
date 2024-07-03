@@ -42,7 +42,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
         public readonly List<BodyPartCollider> Colliders;
         public readonly BifacialTransform Transform;
 
-        public bool LineOfSight => _lastSuccessTime + 0.2f > Time.time;
+        public bool LineOfSight => _lastSuccessTime + 0.25f > Time.time;
 
         private float _nextCheckTime;
 
@@ -73,12 +73,12 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
                 return true;
             }
 
-            if (_nextCheckTime > Time.time)
-            {
-                successPoint = null;
-                return false;
-            }
-            _nextCheckTime = Time.time + 0.1f;
+            //if (_nextCheckTime > Time.time)
+            //{
+            //    successPoint = null;
+            //    return false;
+            //}
+            //_nextCheckTime = Time.time + 0.1f;
 
             BodyPartCollider collider = getCollider();
             Vector3 castPoint = getCastPoint(origin, collider);

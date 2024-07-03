@@ -4,7 +4,7 @@ using System;
 
 namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
 {
-    public class EnemyValidChecker : EnemyBase, ISAINClass
+    public class EnemyValidChecker : EnemyBase, IBotClass
     {
         public bool IsValid => checkValid();
 

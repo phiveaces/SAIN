@@ -4,7 +4,7 @@ using System;
 
 namespace SAIN.SAINComponent.Classes.EnemyClasses
 {
-    public class EnemyControllerEvents : BotSubClassBase<SAINEnemyController>, ISAINClass
+    public class EnemyControllerEvents : BotSubClass<SAINEnemyController>, IBotClass
     {
         public ToggleEventTimeTracked OnPeaceChanged { get; } = new ToggleEventTimeTracked(true);
         public ToggleEvent ActiveHumanEnemyEvent { get; } = new ToggleEvent();
@@ -17,6 +17,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
         public event Action<Enemy, SAINSoundType, bool> OnEnemyHeard;
         public event Action<bool, Enemy> OnEnemyKnownChanged;
         public event Action<Enemy, Enemy> OnEnemyChanged;
+        public event Action<ETagStatus, Enemy> OnEnemyHealthChanged;
 
         public EnemyControllerEvents(SAINEnemyController controller) : base(controller)
         {
@@ -55,9 +56,24 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
             }
         }
 
+        private void enemyHealthChanged(Enemy enemy, ETagStatus health)
+        {
+            OnEnemyHealthChanged?.Invoke(health, enemy);
+        }
+
         public void EnemyChanged(Enemy enemy, Enemy lastEnemy)
         {
             OnEnemyChanged?.Invoke(enemy, lastEnemy);
+        }
+
+        public void EnemyAdded(Enemy enemy)
+        {
+            enemy.EnemyPlayer.OnPlayerDead += enemyKilled;
+            enemy.Events.OnEnemyHeard += enemyHeard;
+            enemy.Events.OnEnemyKnownChanged.OnToggle += enemyKnownChanged;
+            enemy.Events.OnEnemyShot += enemyHit;
+            enemy.Events.OnHealthStatusChanged += enemyHealthChanged;
+            OnEnemyAdded?.Invoke(enemy);
         }
 
         public void EnemyRemoved(string profileID, Enemy enemy)
@@ -67,17 +83,9 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
                 enemy.Events.OnEnemyHeard -= enemyHeard;
                 enemy.Events.OnEnemyKnownChanged.OnToggle -= enemyKnownChanged;
                 enemy.Events.OnEnemyShot -= enemyHit;
+                enemy.Events.OnHealthStatusChanged -= enemyHealthChanged;
             }
             OnEnemyRemoved?.Invoke(profileID, enemy);
-        }
-
-        public void EnemyAdded(Enemy enemy)
-        {
-            enemy.EnemyPlayer.OnPlayerDead += enemyKilled;
-            enemy.Events.OnEnemyHeard += enemyHeard;
-            enemy.Events.OnEnemyKnownChanged.OnToggle += enemyKnownChanged;
-            enemy.Events.OnEnemyShot += enemyHit;
-            OnEnemyAdded?.Invoke(enemy);
         }
 
         private void enemyKnownChanged(bool value, Enemy enemy)

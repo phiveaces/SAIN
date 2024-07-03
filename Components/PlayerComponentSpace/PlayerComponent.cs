@@ -186,6 +186,7 @@ namespace SAIN.Components.PlayerComponentSpace
 
         private void OnDisable()
         {
+            Person.ActiveClass.Disable();
             stopCoroutines();
         }
 

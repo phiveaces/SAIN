@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.WeaponFunction
 {
-    public class Recoil : BotBaseClass, ISAINClass
+    public class Recoil : BotBase, IBotClass
     {
         public Vector3 CurrentRecoilOffset { get; private set; } = Vector3.zero;
         private Vector3 _lookDir => Player.LookDirection * 10f;

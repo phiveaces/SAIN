@@ -108,28 +108,28 @@ namespace SAIN.Preset.GlobalSettings
 
             switch (weaponInfo.WeaponClass)
             {
-                case IWeaponClass.pistol:
+                case EWeaponClass.pistol:
                     result += PISTOL_POWER;
                     break;
-                case IWeaponClass.smg:
+                case EWeaponClass.smg:
                     result += SMG_POWER;
                     break;
-                case IWeaponClass.assaultCarbine:
+                case EWeaponClass.assaultCarbine:
                     result += ASSAULT_CARBINE_POWER;
                     break;
-                case IWeaponClass.assaultRifle:
+                case EWeaponClass.assaultRifle:
                     result += ASSAULT_RIFLE_POWER;
                     break;
-                case IWeaponClass.machinegun:
+                case EWeaponClass.machinegun:
                     result += MG_POWER;
                     break;
-                case IWeaponClass.marksmanRifle:
+                case EWeaponClass.marksmanRifle:
                     result += MARKSMAN_RIFLE_POWER;
                     break;
-                case IWeaponClass.sniperRifle:
+                case EWeaponClass.sniperRifle:
                     result += SNIPE_POWER;
                     break;
-                case IWeaponClass.shotgun:
+                case EWeaponClass.shotgun:
                     result += SHOTGUN_POWER;
                     break;
                 default:

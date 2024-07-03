@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Decision
 {
-    public class EnemyDecisionClass : BotBaseClass, ISAINClass
+    public class EnemyDecisionClass : BotBase, IBotClass
     {
         public EnemyDecisionClass(BotComponent sain) : base(sain)
         {
@@ -16,7 +16,7 @@ namespace SAIN.SAINComponent.Classes.Decision
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
         }
 
         public void Update()

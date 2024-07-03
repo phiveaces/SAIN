@@ -10,7 +10,7 @@ using static UnityEngine.EventSystems.EventTrigger;
 
 namespace SAIN.SAINComponent.Classes.Sense
 {
-    public class FlashLightDazzleClass : BotBaseClass
+    public class FlashLightDazzleClass : BotBase
     {
         private TemporaryStatModifiers Modifiers = new TemporaryStatModifiers(1f, 1f, 1f, 1f, 1f);
 

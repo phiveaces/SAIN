@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.WeaponFunction
 {
-    public class ManualShootClass : BotBaseClass
+    public class ManualShootClass : BotBase
     {
         public ManualShootClass(BotComponent bot) : base(bot) { }
 

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.WeaponFunction
 {
-    public class SAINBotGrenadeClass : BotBaseClass, ISAINClass
+    public class SAINBotGrenadeClass : BotBase, IBotClass
     {
         public GrenadeTracker DangerGrenade { get; private set; }
         public Vector3? GrenadeDangerPoint => DangerGrenade?.DangerPoint;

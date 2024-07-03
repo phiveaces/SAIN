@@ -22,7 +22,7 @@ namespace SAIN.Plugin
                 return false;
             }
 
-            bool result = component.Hearing.SetIgnoreHearingExternal(value, ignoreUnderFire, duration, out string reason);
+            bool result = component.Hearing.SoundInput.SetIgnoreHearingExternal(value, ignoreUnderFire, duration, out string reason);
             return result;
         }
 

@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes
 {
-    public class BotHitByEnemyClass : BotMedicalBase, ISAINClass
+    public class BotHitByEnemyClass : BotMedicalBase, IBotClass
     {
         public Enemy EnemyWhoLastShotMe { get; private set; }
 
@@ -53,7 +53,7 @@ namespace SAIN.SAINComponent.Classes
         }
     }
 
-    public class SAINBotHitReaction : BotMedicalBase, ISAINClass
+    public class SAINBotHitReaction : BotMedicalBase, IBotClass
     {
         public EHitReaction HitReaction { get; private set; }
         public IHealthController HealthController => Player.HealthController;

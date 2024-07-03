@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Memory
 {
-    public class HealthTracker : BotBaseClass, ISAINClass
+    public class HealthTracker : BotBase, IBotClass
     {
         public Action<ETagStatus> HealthStatusChanged { get; set; }
         public bool Healthy => HealthStatus == ETagStatus.Healthy;

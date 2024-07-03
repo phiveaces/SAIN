@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace SAIN.SAINComponent.Classes.EnemyClasses
 {
-    public class EnemyListController : BotSubClassBase<SAINEnemyController>, ISAINClass
+    public class EnemyListController : BotSubClass<SAINEnemyController>, IBotClass
     {
         public Dictionary<string, Enemy> Enemies { get; } = new Dictionary<string, Enemy>();
 

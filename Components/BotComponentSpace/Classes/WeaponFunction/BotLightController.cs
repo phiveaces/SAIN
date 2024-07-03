@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.WeaponFunction
 {
-    public class BotLightController : BotBaseClass, ISAINClass
+    public class BotLightController : BotBase, IBotClass
     {
         public BotLightController(BotComponent sain) : base(sain)
         {
@@ -12,7 +12,7 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
         }
 
         public void Update()

@@ -6,7 +6,7 @@ using UnityEngine.AI;
 
 namespace SAIN.SAINComponent.Classes.Mover
 {
-    public class SAINVaultClass : BotBaseClass, ISAINClass
+    public class SAINVaultClass : BotBase, IBotClass
     {
         public SAINVaultClass(BotComponent sain) : base(sain)
         {

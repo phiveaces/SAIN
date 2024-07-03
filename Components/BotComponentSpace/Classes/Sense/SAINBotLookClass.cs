@@ -9,7 +9,7 @@ using LookAllData = GClass521;
 
 namespace SAIN.SAINComponent.Classes
 {
-    public class SAINBotLookClass : BotBaseClass
+    public class SAINBotLookClass : BotBase
     {
         public SAINBotLookClass(BotComponent component) : base(component)
         {
@@ -18,7 +18,7 @@ namespace SAIN.SAINComponent.Classes
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
             _enemies = Bot.EnemyController.Enemies;
         }
 

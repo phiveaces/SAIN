@@ -1,6 +1,6 @@
 ﻿namespace SAIN.SAINComponent.Classes.Mover
 {
-    public class SAINHeadSteering : BotBaseClass, ISAINClass
+    public class SAINHeadSteering : BotBase, IBotClass
     {
         public SAINHeadSteering(BotComponent bot) : base(bot)
         {
@@ -9,7 +9,7 @@
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
         }
 
         public void Update()

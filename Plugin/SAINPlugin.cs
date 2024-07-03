@@ -88,7 +88,7 @@ namespace SAIN
                 typeof(Patches.Generic.Fixes.FightShallReloadFixPatch),
                 typeof(Patches.Generic.Fixes.BotMemoryAddEnemyPatch),
                 typeof(Patches.Generic.Fixes.BotGroupAddEnemyPatch),
-                typeof(Patches.Generic.Fixes.NoTeleportPatch),
+                //typeof(Patches.Generic.Fixes.NoTeleportPatch),
                 typeof(Patches.Generic.Fixes.FixItemTakerPatch),
                 typeof(Patches.Generic.Fixes.FixItemTakerPatch2),
                 typeof(Patches.Generic.Fixes.FixPatrolDataPatch),

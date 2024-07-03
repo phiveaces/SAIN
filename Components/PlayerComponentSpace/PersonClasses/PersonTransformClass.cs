@@ -5,6 +5,11 @@ namespace SAIN.Components.PlayerComponentSpace.PersonClasses
 {
     public class PersonTransformClass
     {
+        private const float TRANSFORM_UPDATE_HEADLOOK_FREQ = 1f / 30f;
+        private const float TRANSFORM_UPDATE_VELOCITY_FREQ = 1f / 5f;
+        private const float TRANSFORM_MIN_VELOCITY = 0.25f;
+        private const float TRANSFORM_MAX_VELOCITY = 5f;
+
         public Vector3 Position { get; private set; }
         public Vector3 LookDirection { get; private set; }
         public Vector3 HeadLookDirection { get; private set; }
@@ -13,6 +18,10 @@ namespace SAIN.Components.PlayerComponentSpace.PersonClasses
         public Vector3 BodyPosition { get; private set; }
         public Vector3 WeaponFirePort { get; private set; }
         public Vector3 WeaponPointDirection { get; private set; }
+
+        public float VelocityMagnitudeNormal { get; private set; }
+        public float VelocityMagnitude { get; private set; }
+        public Vector3 Velocity { get; private set; }
 
         public Vector3 DirectionToMe(Vector3 point)
         {
@@ -38,40 +47,37 @@ namespace SAIN.Components.PlayerComponentSpace.PersonClasses
 
         public void UpdatePositions()
         {
+            updateTransform();
+            updateVelocity();
+        }
+
+        private void updateTransform()
+        {
             Position = _transform.position;
             EyePosition = _eyePart.Center;
             HeadPosition = _myHead.position;
-
-            if (_nextUpdateTime > Time.time)
-            {
-                return;
-            }
-
-            _nextUpdateTime = Time.time + TRANSFORM_UPDATE_FREQ;
-
-
-            var player = Person.Player;
-            LookDirection = player.MovementContext.LookDirection;
-
-            //HeadLookDirection = Quaternion.Euler(_myHead.localRotation.y, _myHead.localRotation.x, 0) * _myHead.forward;
-            Vector3 headLookDir = Quaternion.Euler(0, _myHead.rotation.x + 90, 0) * _myHead.forward;
-            headLookDir.y = LookDirection.y;
-            HeadLookDirection = headLookDir;
-
             BodyPosition = _bodyPart.position;
+            LookDirection = Person.Player.MovementContext.LookDirection;
 
-            if (player.Fireport != null && player.Fireport.Original != null)
+            if (_nextUpdateHeadLookTime <= Time.time)
             {
-                WeaponFirePort = player.Fireport.position;
-                WeaponPointDirection = player.Fireport.Original.TransformDirection(player.LocalShotDirection);
+                _nextUpdateHeadLookTime = Time.time + TRANSFORM_UPDATE_HEADLOOK_FREQ;
+                //HeadLookDirection = Quaternion.Euler(_myHead.localRotation.y, _myHead.localRotation.x, 0) * _myHead.forward;
+                Vector3 headLookDir = Quaternion.Euler(0, _myHead.rotation.x + 90, 0) * _myHead.forward;
+                headLookDir.y = LookDirection.y;
+                HeadLookDirection = headLookDir;
             }
-
-            PlayerVelocity = getPlayerVelocity();
         }
 
-        private const float TRANSFORM_UPDATE_FPS = 30f;
-        public const float TRANSFORM_UPDATE_FREQ = 1f / TRANSFORM_UPDATE_FPS;
-        private float _nextUpdateTime;
+        private void updateVelocity()
+        {
+            if (_nextUpdateVelocityTime <= Time.time)
+            {
+                _nextUpdateVelocityTime = Time.time + TRANSFORM_UPDATE_VELOCITY_FREQ;
+                Velocity = Person.Player.MovementContext.Velocity;
+                getPlayerVelocity(Velocity.magnitude);
+            }
+        }
 
         public PersonTransformClass(PersonClass person)
         {
@@ -83,34 +89,28 @@ namespace SAIN.Components.PlayerComponentSpace.PersonClasses
             _eyePart = _bones.BodyPartCollidersDictionary[EBodyPartColliderType.Eyes];
         }
 
-        public float PlayerVelocity { get; private set; }
-
-        private float getPlayerVelocity()
+        private void getPlayerVelocity(float magnitude)
         {
-            const float min = 0.5f * 0.5f;
-            const float max = 5f * 5f;
-
-            var player = Person.Player;
-            if (player == null)
+            if (magnitude <= TRANSFORM_MIN_VELOCITY)
             {
-                return 0f;
+                VelocityMagnitude = 0f;
+                VelocityMagnitudeNormal = 0f;
+                return;
             }
-
-            float rawVelocity = player.Velocity.sqrMagnitude;
-            if (rawVelocity <= min)
+            if (magnitude >= TRANSFORM_MAX_VELOCITY)
             {
-                return 0f;
+                VelocityMagnitude = TRANSFORM_MAX_VELOCITY;
+                VelocityMagnitudeNormal = 1f;
+                return;
             }
-            if (rawVelocity >= max)
-            {
-                return 1f;
-            }
-
-            float num = max - min;
-            float num2 = rawVelocity - min;
-            return num2 / num;
+            VelocityMagnitude = magnitude;
+            float num = TRANSFORM_MAX_VELOCITY - TRANSFORM_MIN_VELOCITY;
+            float num2 = magnitude - TRANSFORM_MIN_VELOCITY;
+            VelocityMagnitudeNormal = num2 / num;
         }
 
+        private float _nextUpdateHeadLookTime;
+        private float _nextUpdateVelocityTime;
         private readonly PersonClass Person;
         private readonly BifacialTransform _transform;
         private readonly BifacialTransform _myHead;

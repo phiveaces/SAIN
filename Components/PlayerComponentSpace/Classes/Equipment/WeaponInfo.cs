@@ -59,8 +59,8 @@ namespace SAIN.SAINComponent.Classes.Info
             }
         }
 
-        public IWeaponClass WeaponClass { get; private set; }
-        public ICaliber AmmoCaliber { get; private set; }
+        public EWeaponClass WeaponClass { get; private set; }
+        public ECaliber AmmoCaliber { get; private set; }
         public float CalculatedAudibleRange { get; private set; }
         public AISoundType AISoundType => HasSuppressor ? AISoundType.silencedGun : AISoundType.gun;
         public SAINSoundType SoundType => HasSuppressor ? SAINSoundType.SuppressedShot : SAINSoundType.Shot;
@@ -261,22 +261,22 @@ namespace SAIN.SAINComponent.Classes.Info
             return false;
         }
 
-        private static IWeaponClass TryGetWeaponClass(Weapon weapon)
+        private static EWeaponClass TryGetWeaponClass(Weapon weapon)
         {
-            IWeaponClass WeaponClass = EnumValues.TryParse<IWeaponClass>(weapon.Template.weapClass);
+            EWeaponClass WeaponClass = EnumValues.TryParse<EWeaponClass>(weapon.Template.weapClass);
             if (WeaponClass == default)
             {
-                WeaponClass = EnumValues.TryParse<IWeaponClass>(weapon.WeapClass);
+                WeaponClass = EnumValues.TryParse<EWeaponClass>(weapon.WeapClass);
             }
             return WeaponClass;
         }
 
-        private static ICaliber TryGetAmmoCaliber(Weapon weapon)
+        private static ECaliber TryGetAmmoCaliber(Weapon weapon)
         {
-            ICaliber caliber = EnumValues.TryParse<ICaliber>(weapon.Template.ammoCaliber);
+            ECaliber caliber = EnumValues.TryParse<ECaliber>(weapon.Template.ammoCaliber);
             if (caliber == default)
             {
-                caliber = EnumValues.TryParse<ICaliber>(weapon.AmmoCaliber);
+                caliber = EnumValues.TryParse<ECaliber>(weapon.AmmoCaliber);
             }
             return caliber;
         }

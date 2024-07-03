@@ -72,11 +72,11 @@ namespace SAIN.Attributes
             if (!ExpandableList(attributes, entryConfig.EntryHeight + 5))
                 return value;
 
-            if (value is Dictionary<ICaliber, float>)
-                EditFloatDictionary<ICaliber>(value, attributes, out wasEdited);
+            if (value is Dictionary<ECaliber, float>)
+                EditFloatDictionary<ECaliber>(value, attributes, out wasEdited);
 
-            if (value is Dictionary<IWeaponClass, float>)
-                EditFloatDictionary<IWeaponClass>(value, attributes, out wasEdited);
+            if (value is Dictionary<EWeaponClass, float>)
+                EditFloatDictionary<EWeaponClass>(value, attributes, out wasEdited);
 
             if (value is Dictionary<ESoundDispersionType, DispersionValues>)
                 EditDispersionDictionary(value as Dictionary<ESoundDispersionType, DispersionValues>, settingsObject, attributes, out wasEdited);

@@ -4,67 +4,13 @@ using SAIN.SAINComponent.Classes.EnemyClasses;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing.Printing;
 using UnityEngine;
 using UnityEngine.AI;
 
 namespace SAIN.SAINComponent.Classes.Mover
 {
-    public class ObstacleAgent : MonoBehaviour
-    {
-        private float CarvingTime = 0.5f;
-        private float CarvingMoveThreshold = 0.1f;
-
-        private NavMeshAgent Agent;
-        private NavMeshObstacle Obstacle;
-
-        private float LastMoveTime;
-        private Vector3 LastPosition;
-
-        private void Awake()
-        {
-            Agent = GetComponent<NavMeshAgent>();
-            Obstacle = GetComponent<NavMeshObstacle>();
-
-            Obstacle.enabled = false;
-            Obstacle.carveOnlyStationary = false;
-            Obstacle.carving = true;
-
-            LastPosition = transform.position;
-        }
-
-        private void Update()
-        {
-            if (Vector3.Distance(LastPosition, transform.position) > CarvingMoveThreshold)
-            {
-                LastMoveTime = Time.time;
-                LastPosition = transform.position;
-            }
-            if (LastMoveTime + CarvingTime < Time.time)
-            {
-                Agent.enabled = false;
-                Obstacle.enabled = true;
-            }
-        }
-
-        public void SetDestination(Vector3 Position)
-        {
-            Obstacle.enabled = false;
-
-            LastMoveTime = Time.time;
-            LastPosition = transform.position;
-
-            StartCoroutine(MoveAgent(Position));
-        }
-
-        private IEnumerator MoveAgent(Vector3 Position)
-        {
-            yield return null;
-            Agent.enabled = true;
-            Agent.SetDestination(Position);
-        }
-    }
-
-    public class SAINMoverClass : BotBaseClass, ISAINClass
+    public class SAINMoverClass : BotBase, IBotClass
     {
         public SAINMoverClass(BotComponent sain) : base(sain)
         {
@@ -82,7 +28,7 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
             UpdateBodyNavObstacle(false);
         }
 
@@ -106,6 +52,15 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         public void Update()
         {
+            if (SprintController.Running || Player.IsSprintEnabled)
+            {
+                float time = Time.time + 0.5f;
+                _changSpeedTime = time;
+            }
+            if (Crawling && !BotOwner.Mover.IsMoving)
+            {
+                Crawling = false;
+            }
             updateStamina();
             Pose.Update();
             Lean.Update();
@@ -137,6 +92,10 @@ namespace SAIN.SAINComponent.Classes.Mover
             {
                 return;
             }
+            if (!Player.MovementContext.IsGrounded)
+            {
+                return;
+            }
             // Reset to navmesh 
             ResetToNavMesh();
         }
@@ -159,7 +118,7 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         private Vector3 _prevLinkPos;
 
-        private readonly float _timeAfterJumpVaultReset = 1f;
+        private readonly float _timeAfterJumpVaultReset = 1.25f;
 
         public void Dispose()
         {
@@ -174,23 +133,32 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         public NavMeshObstacle BotBodyObstacle { get; private set; }
 
+        public bool Crawling { get; private set; }
+
         public bool GoToPoint(Vector3 point, out bool calculating, float reachDist = -1f, bool crawl = false, bool slowAtEnd = true, bool mustHaveCompletePath = true)
         {
             calculating = false;
+            if (SprintController.Running)
+            {
+                SprintController.CancelRun(0.25f);
+                if (SprintController.Canceling)
+                {
+                    return false;
+                }
+            }
             if (reachDist < 0f)
             {
                 reachDist = SAINPlugin.LoadedPreset.GlobalSettings.General.BaseReachDistance;
             }
-            CurrentPathStatus = BotOwner.Mover.GoToPoint(point, slowAtEnd, reachDist, false, mustHaveCompletePath, true);
+            CurrentPathStatus = BotOwner.Mover.GoToPoint(point, slowAtEnd, reachDist, false, false, true);
             if (CurrentPathStatus != NavMeshPathStatus.PathInvalid)
             {
-                if (crawl)
-                {
-                    Prone.SetProne(true);
-                }
+                Crawling = crawl;
+                Prone.SetProne(crawl);
                 Bot.DoorOpener.Update();
                 return true;
             }
+            Crawling = false;
             return false;
         }
 
@@ -264,96 +232,39 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         public SAINMovementPlan MovementPlan { get; private set; }
 
-        public bool GoToPointNew(Vector3 point, float reachDist = -1f, bool crawl = false, bool mustHaveCompletePath = false, float navSampleRange = 3f)
-        {
-            if (FindPathToPoint(CurrentPath, point, mustHaveCompletePath, navSampleRange))
-            {
-                if (reachDist < 0f)
-                {
-                    reachDist = BotOwner.Settings.FileSettings.Move.REACH_DIST;
-                }
-                BotOwner.Mover.GoToByWay(CurrentPath.corners, reachDist);
-                if (crawl)
-                {
-                    Prone.SetProne(true);
-                }
-                Bot.DoorOpener.Update();
-                return true;
-            }
-            return false;
-        }
-
-        public bool CanGoToPointNew(Vector3 point, out Vector3 pointToGo, bool mustHaveCompletePath = false, float navSampleRange = 3f)
-        {
-            pointToGo = Vector3.zero;
-
-            if (NavMesh.SamplePosition(point, out var navHit, navSampleRange, -1))
-            {
-                if (CurrentPath == null)
-                {
-                    CurrentPath = new NavMeshPath();
-                }
-                else
-                {
-                    CurrentPath.ClearCorners();
-                }
-                if (NavMesh.CalculatePath(Bot.Transform.Position, navHit.position, -1, CurrentPath) && CurrentPath.corners.Length > 1)
-                {
-                    if (mustHaveCompletePath && CurrentPath.status != NavMeshPathStatus.PathComplete)
-                    {
-                        return false;
-                    }
-                    pointToGo = navHit.position;
-
-                    //SAINVaultClass.FindVaultPoint(Player, Path, out SAINVaultPoint vaultPoint);
-
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public bool FindPathToPoint(NavMeshPath path, Vector3 pointToGo, bool mustHaveCompletePath = false, float navSampleRange = 3f)
-        {
-            if (path == null)
-            {
-                path = new NavMeshPath();
-            }
-
-            if (NavMesh.SamplePosition(pointToGo, out var navHit, navSampleRange, -1))
-            {
-                path.ClearCorners();
-                if (NavMesh.CalculatePath(Bot.Transform.Position, navHit.position, -1, path) && path.corners.Length > 1)
-                {
-                    if (mustHaveCompletePath && path.status != NavMeshPathStatus.PathComplete)
-                    {
-                        return false;
-                    }
-
-                    return true;
-                }
-            }
-            return false;
-        }
-
         public NavMeshPath CurrentPath { get; private set; }
 
         private void updateStamina()
         {
             if (Bot.SAINLayersActive &&
-                CurrentStamina < 0.1f &&
                 Bot.ActiveLayer != ESAINLayer.Extract && 
-                !SprintController.Running)
+                !SprintController.Running && 
+                !Player.IsSprintEnabled)
             {
-                Player.Physical.Stamina.UpdateStamina(Player.Physical.Stamina.TotalCapacity / 4f);
+                float staminaDivisor;
+                float minStamina;
+                if (ModDetection.RealismLoaded && BotOwner.Mover.TargetPose < 1f)
+                {
+                    staminaDivisor = 1.5f;
+                    minStamina = 0.5f;
+                }
+                else
+                {
+                    staminaDivisor = 2f;
+                    minStamina = 0.01f;
+                }
+                if (CurrentStamina < minStamina)
+                {
+                    Player.Physical.Stamina.UpdateStamina(Player.Physical.Stamina.TotalCapacity / staminaDivisor);
+                }
             }
         }
 
         public float CurrentStamina => Player.Physical.Stamina.NormalValue;
 
-        public void SetTargetPose(float pose)
+        public bool SetTargetPose(float pose)
         {
-            Pose.SetTargetPose(pose);
+            return Pose.SetTargetPose(pose);
         }
 
         public void SetTargetMoveSpeed(float speed)
@@ -368,13 +279,24 @@ namespace SAIN.SAINComponent.Classes.Mover
         {
             if (SprintController.Running || Player.IsSprintEnabled)
             {
-                _changSpeedSprintTime = Time.time + 0.33f;
+                _changSpeedTime = Time.time + 0.5f;
                 BotOwner.Mover?.SetTargetMoveSpeed(1f);
             }
-            return _changSpeedSprintTime < Time.time;
+            return _changSpeedTime < Time.time;
         }
 
-        private float _changSpeedSprintTime;
+        private bool canSetPose()
+        {
+            if (SprintController.Running || Player.IsSprintEnabled)
+            {
+                _changePoseTime = Time.time + 0.5f;
+                //BotOwner.Mover?.SetTargetMoveSpeed(1f);
+            }
+            return _changePoseTime < Time.time;
+        }
+
+        private float _changePoseTime;
+        private float _changSpeedTime;
 
         public void StopMove(float delay = 0.1f, float forDuration = 0f)
         {

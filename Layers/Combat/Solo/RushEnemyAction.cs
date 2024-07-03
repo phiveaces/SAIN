@@ -67,7 +67,7 @@ namespace SAIN.Layers.Combat.Solo
 
             Shoot.Update();
             Bot.Mover.Sprint(false);
-            Bot.Mover.SprintController.CancelRun();
+            Bot.Mover.SprintController.CancelRun(0.25f);
             Bot.Mover.DogFight.DogFightMove(true);
 
             if (_enemy.IsVisible && _enemy.CanShoot)
@@ -119,6 +119,10 @@ namespace SAIN.Layers.Combat.Solo
         {
             if (_pathUpdated && _updateMoveTime < Time.time)
             {
+                if (Bot.Mover.SprintController.Running && Bot.Mover.SprintController.Canceling)
+                {
+                    return;
+                }
                 _updateMoveTime = Time.time + 0.1f;
                 if (updateMove(_enemy))
                 {
@@ -159,7 +163,7 @@ namespace SAIN.Layers.Combat.Solo
                 return true;
             }
             _lastMovePos = lastKnown.Value;
-            if (pathDistance > BotOwner.Settings.FileSettings.Move.RUN_TO_COVER_MIN && sprintController.RunToPointByWay(enemy.Path.PathToEnemy, SAINComponent.Classes.Mover.ESprintUrgency.High))
+            if (pathDistance > BotOwner.Settings.FileSettings.Move.RUN_TO_COVER_MIN && sprintController.RunToPointByWay(enemy.Path.PathToEnemy, SAINComponent.Classes.Mover.ESprintUrgency.High, true))
             {
                 return true;
             }
@@ -217,7 +221,7 @@ namespace SAIN.Layers.Combat.Solo
             }
 
             Bot.Mover.DogFight.ResetDogFightStatus();
-            Bot.Mover.SprintController.CancelRun();
+            Bot.Mover.SprintController.CancelRun(0.25f);
         }
     }
 }

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Decision
 {
-    public class SAINSelfActionClass : BotBaseClass, ISAINClass
+    public class SAINSelfActionClass : BotBase, IBotClass
     {
         public SAINSelfActionClass(BotComponent sain) : base(sain)
         {
@@ -11,7 +11,7 @@ namespace SAIN.SAINComponent.Classes.Decision
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
         }
 
         private float _handsBusyTimer;

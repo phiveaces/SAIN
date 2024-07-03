@@ -42,7 +42,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
             UpdateCanShootState(false);
         }
 
-        public float EnemyVelocity => EnemyTransform.PlayerVelocity;
+        public float EnemyVelocity => EnemyTransform.VelocityMagnitudeNormal;
 
         public bool FirstContactOccured { get; private set; }
 
@@ -61,7 +61,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
 
         private float getAngleToEnemy(bool setYto0)
         {
-            Vector3 direction = EnemyPosition - Enemy.Bot.Position;
+            Vector3 direction = EnemyCurrentPosition - Enemy.Bot.Position;
             Vector3 lookDir = Bot.LookDirection;
             if (setYto0)
             {

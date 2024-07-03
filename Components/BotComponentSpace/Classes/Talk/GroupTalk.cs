@@ -1,7 +1,6 @@
 using EFT;
 using SAIN.Components;
 using SAIN.Helpers;
-using SAIN.Plugin;
 using SAIN.Preset;
 using SAIN.SAINComponent.Classes.Decision;
 using SAIN.SAINComponent.Classes.EnemyClasses;
@@ -12,7 +11,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Talk
 {
-    public class GroupTalk : BotBaseClass, ISAINClass
+    public class GroupTalk : BotBase, IBotClass
     {
         public GroupTalk(BotComponent bot) : base(bot)
         {
@@ -39,7 +38,7 @@ namespace SAIN.SAINComponent.Classes.Talk
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(updateConfigSettings);
+            base.SubscribeToPreset(updateConfigSettings);
         }
 
         public void Update()
@@ -100,15 +99,11 @@ namespace SAIN.SAINComponent.Classes.Talk
                     {
                         return;
                     }
-                    if (ShallReportEnemyHealth())
-                    {
-                        return;
-                    }
                     if (ShallReportNeedHelp())
                     {
                         return;
                     }
-                    if (EFTMath.RandomBool(25)
+                    if (EFTMath.RandomBool(30)
                         && TalkBotDecision(out var trigger, out _))
                     {
                         Bot.Talk.Say(trigger, null, false);
@@ -190,13 +185,11 @@ namespace SAIN.SAINComponent.Classes.Talk
             if (Subscribed)
             {
                 Subscribed = false;
-                PresetHandler.OnPresetUpdated -= updateConfigSettings;
-
                 var squad = Bot?.Squad?.SquadInfo;
                 if (squad != null)
                 {
-                    squad.MemberKilled -= OnFriendlyDown;
-                    squad.OnSoundHeard -= onNoiseHeard;
+                    squad.MemberKilled -= friendlyDown;
+                    squad.OnEnemyHeard -= enemyHeard;
                 }
 
                 var botController = SAINBotController.Instance;
@@ -205,7 +198,10 @@ namespace SAIN.SAINComponent.Classes.Talk
                     botController.PlayerTalk -= EnemyConversation;
 
                 if (Bot.EnemyController != null)
+                {
                     Bot.EnemyController.Events.OnEnemyKilled -= OnEnemyDown;
+                    Bot.EnemyController.Events.OnEnemyHealthChanged -= onHealthChanged;
+                }
             }
         }
 
@@ -215,48 +211,38 @@ namespace SAIN.SAINComponent.Classes.Talk
             if (!Subscribed && squad != null)
             {
                 Subscribed = true;
-
-                PresetHandler.OnPresetUpdated += updateConfigSettings;
-
-                squad.MemberKilled += OnFriendlyDown;
-                squad.OnSoundHeard += onNoiseHeard;
+                squad.MemberKilled += friendlyDown;
+                squad.OnEnemyHeard += enemyHeard;
                 SAINBotController.Instance.PlayerTalk += EnemyConversation;
                 BotOwner.DeadBodyWork.OnStartLookToBody += OnLootBody;
                 Bot.EnemyController.Events.OnEnemyKilled += OnEnemyDown;
+                Bot.EnemyController.Events.OnEnemyHealthChanged += onHealthChanged;
             }
         }
 
-        private void talkNoise(bool conversation)
+        private void onHealthChanged(ETagStatus health, Enemy enemy)
         {
-            if (_nextSayNoise < Time.time && 
-                Bot.Talk.GroupTalk.FriendIsClose && 
-                Bot.Squad.BotInGroup && 
-                (Bot.Enemy == null || Bot.Enemy.TimeSinceSeen > 20f))
+            if (enemy == null)
             {
-                _nextSayNoise = Time.time + 12f;
-                if (EFTMath.RandomBool(35))
-                {
-                    Bot.Talk.TalkAfterDelay(conversation ? EPhraseTrigger.OnEnemyConversation : EPhraseTrigger.NoisePhrase);
-                }
+                return;
             }
-        }
-
-        private float _nextSayNoise;
-
-        private bool ShallReportEnemyHealth()
-        {
-            if (_nextCheckEnemyHPTime < Time.time && Bot.Enemy != null)
+            if (!enemy.IsCurrentEnemy)
+            {
+                return;
+            }
+            if (health != ETagStatus.Dying && health != ETagStatus.BadlyInjured)
+            {
+                return;
+            }
+            if (!EFTMath.RandomBool(_reportEnemyHealthChance))
+            {
+                return;
+            }
+            if (_nextCheckEnemyHPTime < Time.time)
             {
                 _nextCheckEnemyHPTime = Time.time + _reportEnemyHealthFreq;
-                if (EFTMath.RandomBool(_reportEnemyHealthChance))
-                {
-                    ETagStatus health = Bot.Enemy.Status.EnemyHealthStatus;
-                    return 
-                        (health == ETagStatus.Dying || health == ETagStatus.BadlyInjured) && 
-                        Bot.Talk.GroupSay(EPhraseTrigger.OnEnemyShot, null, false, 100);
-                }
+                Bot.Talk.GroupSay(EPhraseTrigger.OnEnemyShot, null, false, 100);
             }
-            return false;
         }
 
         private bool CheckEnemyContact()
@@ -351,7 +337,7 @@ namespace SAIN.SAINComponent.Classes.Talk
             }
         }
 
-        private void OnFriendlyDown(IPlayer player, DamageInfo damage, float time)
+        private void friendlyDown(IPlayer player, DamageInfo damage, float time)
         {
             if (BotOwner.IsDead || BotOwner.BotState != EBotState.Active || !EFTMath.RandomBool(_reportFriendKilledChance))
             {
@@ -571,31 +557,39 @@ namespace SAIN.SAINComponent.Classes.Talk
             return false;
         }
 
-        private void onNoiseHeard(PlaceForCheck heardNoise)
+        private void enemyHeard(EnemyPlace place, Enemy enemy, SAINSoundType soundType)
         {
             float time = Time.time;
-            if (BotOwner == null || !BotOwner.Memory.IsPeace || _hearNoiseTime > time || !EFTMath.RandomBool(_hearNoiseChance))
+            if (!Bot.BotActive || 
+                _hearNoiseTime > time || 
+                !EFTMath.RandomBool(_hearNoiseChance))
+            {
+                return;
+            }
+
+            if (Bot.HasEnemy && Bot.Enemy.TimeSinceSeen < 120f)
+            {
+                return;
+            }
+
+            if (!Bot.Talk.GroupTalk.FriendIsClose)
             {
                 return;
             }
 
             _hearNoiseTime = time + _hearNoiseFreq;
 
-            if (heardNoise == null || heardNoise.IsDanger)
+            if (place == null || soundType.IsGunShot())
             {
                 return;
             }
-            if (heardNoise.CheckingPlayer != null && heardNoise.CheckingPlayer.ProfileId != BotOwner.ProfileId)
-            {
-                return;
-            }
-
-            if ((heardNoise.Position - Bot.Position).sqrMagnitude > _hearNoiseMaxDist)
+            if (enemy.RealDistance > _hearNoiseMaxDist)
             {
                 return;
             }
 
-            Bot.Talk.TalkAfterDelay(EPhraseTrigger.NoisePhrase, ETagStatus.Aware, 0.33f);
+            EPhraseTrigger trigger = soundType == SAINSoundType.Conversation ? EPhraseTrigger.OnEnemyConversation : EPhraseTrigger.NoisePhrase;
+            Bot.Talk.TalkAfterDelay(trigger, ETagStatus.Aware, 0.33f);
         }
 
         private bool TalkBotDecision(out EPhraseTrigger trigger, out ETagStatus mask)
@@ -606,7 +600,7 @@ namespace SAIN.SAINComponent.Classes.Talk
                 case SelfDecision.FirstAid:
                 case SelfDecision.Stims:
                 case SelfDecision.Surgery:
-                    trigger = EPhraseTrigger.StartHeal;
+                    trigger = EPhraseTrigger.CoverMe;
                     break;
 
                 default:

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Info
 {
-    public class SAINSquadClass : BotBaseClass, ISAINClass
+    public class SAINSquadClass : BotBase, IBotClass
     {
         public SAINSquadClass(BotComponent sain) : base(sain)
         {
@@ -14,7 +14,7 @@ namespace SAIN.SAINComponent.Classes.Info
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
             SquadInfo = SAINBotController.Instance.BotSquads.GetSquad(Bot);
         }
 

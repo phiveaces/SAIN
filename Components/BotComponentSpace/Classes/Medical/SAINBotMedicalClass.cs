@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes
 {
-    public class SAINBotMedicalClass : BotBaseClass, ISAINClass
+    public class SAINBotMedicalClass : BotBase, IBotClass
     {
         public SAINBotMedicalClass(BotComponent sain) : base(sain)
         {

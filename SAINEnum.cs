@@ -42,7 +42,7 @@ namespace SAIN
         Clear,
     }
 
-    public enum IWeaponClass
+    public enum EWeaponClass
     {
         Default,
         assaultRifle,
@@ -57,7 +57,7 @@ namespace SAIN
         specialWeapon
     }
 
-    public enum ICaliber
+    public enum ECaliber
     {
         Default,
         Caliber9x18PM,

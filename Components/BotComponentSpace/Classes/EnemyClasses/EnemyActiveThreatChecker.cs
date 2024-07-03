@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
 {
-    public class EnemyActiveThreatChecker : EnemyBase, ISAINClass
+    public class EnemyActiveThreatChecker : EnemyBase, IBotClass
     {
         public bool ActiveThreat { get; private set; }
 
@@ -61,7 +61,7 @@ namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
                 return false;
             }
             float timeSinceActive = Enemy.TimeSinceCurrentEnemy;
-            float sqrMagnitude = (lastKnown.Value - EnemyPosition).sqrMagnitude;
+            float sqrMagnitude = (lastKnown.Value - EnemyCurrentPosition).sqrMagnitude;
             if (Enemy.IsAI)
             {
                 // Is the AI Enemys current position greater than x meters away from our last known position?

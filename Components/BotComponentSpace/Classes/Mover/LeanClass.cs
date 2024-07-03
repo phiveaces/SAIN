@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Mover
 {
-    public class LeanClass : BotBaseClass, ISAINClass
+    public class LeanClass : BotBase, IBotClass
     {
         public LeanClass(BotComponent sain) : base(sain)
         {
@@ -13,7 +13,7 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
         }
 
         private static readonly SoloDecision[] DontLean =

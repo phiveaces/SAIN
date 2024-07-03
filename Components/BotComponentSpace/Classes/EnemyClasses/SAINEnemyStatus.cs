@@ -166,7 +166,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
                 if (_nextCheckEnemyLookTime < Time.time)
                 {
                     _nextCheckEnemyLookTime = Time.time + 0.2f;
-                    Vector3 directionToBot = (Bot.Position - EnemyPosition).normalized;
+                    Vector3 directionToBot = (Bot.Position - EnemyCurrentPosition).normalized;
                     Vector3 enemyLookDirection = EnemyPerson.Transform.LookDirection.normalized;
                     float dot = Vector3.Dot(directionToBot, enemyLookDirection);
                     _enemyLookAtMe = dot >= 0.9f;

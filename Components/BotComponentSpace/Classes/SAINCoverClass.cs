@@ -15,7 +15,7 @@ namespace SAIN.SAINComponent.Classes
         on = 1,
     }
 
-    public class SAINCoverClass : BotBaseClass, ISAINClass
+    public class SAINCoverClass : BotBase, IBotClass
     {
         public SAINCoverClass(BotComponent bot) : base(bot)
         {
@@ -47,7 +47,7 @@ namespace SAIN.SAINComponent.Classes
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
             CoverFinder.Init(Bot);
         }
 

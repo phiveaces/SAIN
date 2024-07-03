@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes
 {
-    public class SAINAILimit : BotBaseClass, ISAINClass
+    public class SAINAILimit : BotBase, IBotClass
     {
         public event Action<AILimitSetting> OnAILimitChanged;
         public AILimitSetting CurrentAILimit { get; private set; }
@@ -20,7 +20,7 @@ namespace SAIN.SAINComponent.Classes
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(UpdatePresetSettings);
+            base.SubscribeToPreset(UpdatePresetSettings);
         }
 
         public void Update()

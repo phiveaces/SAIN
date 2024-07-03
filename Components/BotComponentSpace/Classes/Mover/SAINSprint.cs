@@ -18,18 +18,20 @@ namespace SAIN.SAINComponent.Classes.Mover
 {
     public enum RunStatus
     {
-        None = 0,
-        FirstTurn = 1,
-        Running = 2,
-        Turning = 3,
-        NoStamina = 4,
-        InteractingWithDoor = 5,
-        ArrivingAtDestination = 6,
-        CantSprint = 7,
-        ShortCorner = 8,
+        None,
+        FirstTurn,
+        Running,
+        Turning,
+        ShortCorner,
+        NoStamina,
+        InteractingWithDoor,
+        ArrivingAtDestination,
+        CantSprint,
+        LookAtEnemyNoSprint,
+        Canceling,
     }
 
-    public class SAINSprint : BotBaseClass, ISAINClass
+    public class SAINSprint : BotBase, IBotClass
     {
         public SAINSprint(BotComponent sain) : base(sain)
         {
@@ -37,7 +39,7 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
         }
 
         public void Update()
@@ -46,24 +48,53 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         public bool Running => _runToPointCoroutine != null;
 
-        public void CancelRun()
+        public bool Canceling { get; private set; }
+
+        public void CancelRun(float afterTime = -1f)
         {
             if (Running)
             {
-                Bot.StopCoroutine(_runToPointCoroutine);
-                _runToPointCoroutine = null;
-                Bot.Mover.Sprint(false);
-                _path.Clear();
+                if (Canceling)
+                {
+                    return;
+                }
+                if (afterTime > 0f)
+                {
+                    Canceling = true;
+                    Bot.StartCoroutine(cancelRunAfterTime(afterTime));
+                    return;
+                }
+                stopRunCoroutine();
             }
         }
 
-        public bool RunToPointByWay(NavMeshPath way, ESprintUrgency urgency, bool checkSameWay = true, System.Action callback = null)
+        private void stopRunCoroutine()
+        {
+            if (!Running)
+            {
+                return;
+            }
+            Canceling = false;
+            Bot.StopCoroutine(_runToPointCoroutine);
+            _runToPointCoroutine = null;
+            Bot.Mover.Sprint(false);
+            _path.Clear();
+        }
+
+        private IEnumerator cancelRunAfterTime(float afterTime)
+        {
+            yield return new WaitForSeconds(afterTime);
+            Canceling = false;
+            CancelRun(-1f);
+        }
+
+        public bool RunToPointByWay(NavMeshPath way, ESprintUrgency urgency, bool stopSprintEnemyVisible, bool checkSameWay = true, System.Action callback = null)
         {
             if (!getLastCorner(way, out Vector3 point))
             {
                 return false;
             }
-
+            ShallStopSprintWhenSeeEnemy = stopSprintEnemyVisible;
             if (checkSameWay && IsPointSameWay(point))
             {
                 return true;
@@ -97,7 +128,7 @@ namespace SAIN.SAINComponent.Classes.Mover
             return true;
         }
 
-        public bool RunToPoint(Vector3 point, ESprintUrgency urgency, bool checkSameWay = true, System.Action callback = null)
+        public bool RunToPoint(Vector3 point, ESprintUrgency urgency, bool stopSprintEnemyVisible, bool checkSameWay = true, System.Action callback = null)
         {
             if (checkSameWay && IsPointSameWay(point))
             {
@@ -108,10 +139,12 @@ namespace SAIN.SAINComponent.Classes.Mover
             {
                 return false;
             }
-
+            ShallStopSprintWhenSeeEnemy = stopSprintEnemyVisible;
             startRun(path, point, urgency, callback);
             return true;
         }
+
+        private bool ShallStopSprintWhenSeeEnemy;
 
         private bool IsPointSameWay(Vector3 point, float minDistSqr = 0.5f)
         {
@@ -120,9 +153,7 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         private void startRun(NavMeshPath path, Vector3 point, ESprintUrgency urgency, System.Action callback)
         {
-            if (_runToPointCoroutine != null)
-                Bot.StopCoroutine(_runToPointCoroutine);
-
+            stopRunCoroutine();
             BotOwner.AimingData?.LoseTarget();
             LastRunDestination = point;
             CurrentPath = path;
@@ -180,8 +211,8 @@ namespace SAIN.SAINComponent.Classes.Mover
 
             callback?.Invoke();
 
-            CurrentRunStatus = RunStatus.None; 
-            CancelRun();
+            CurrentRunStatus = RunStatus.None;
+            stopRunCoroutine();
         }
 
         private readonly List<Vector3> _path = new List<Vector3>();
@@ -276,7 +307,12 @@ namespace SAIN.SAINComponent.Classes.Mover
                     Vector3 destination = CurrentCornerDestination();
                     float speed = IsSprintEnabled ? _moveSettings.BotSprintTurnSpeed : _moveSettings.BotSprintFirstTurnSpeed;
                     float dotProduct = steer(destination, speed);
-                    move((destination - Bot.Position).normalized);
+                    Vector3 moveDir = (destination - Bot.Position);
+                    if (!Bot.IsSpeedHacker)
+                    {
+                        moveDir = moveDir.normalized;
+                    }
+                    move(moveDir);
 
                     //if (onLastCorner() && 
                     //    distToCurrent <= _moveSettings.BotSprintFinalDestReachDist)
@@ -331,12 +367,31 @@ namespace SAIN.SAINComponent.Classes.Mover
             }
         }
 
+        private bool shallLookAtEnemy()
+        {
+            return ShallStopSprintWhenSeeEnemy && Bot.Enemy?.IsVisible == true;
+        }
+
         private void handleSprinting(float distToCurrent, ESprintUrgency urgency)
         {
             // I cant sprint :(
             if (!Player.MovementContext.CanSprint)
             {
                 CurrentRunStatus = RunStatus.CantSprint;
+                return;
+            }
+
+            if (Canceling)
+            {
+                CurrentRunStatus = RunStatus.Canceling;
+                Bot.Mover.EnableSprintPlayer(false);
+                return;
+            }
+
+            if (shallLookAtEnemy())
+            {
+                CurrentRunStatus = RunStatus.LookAtEnemyNoSprint;
+                Bot.Mover.EnableSprintPlayer(false);
                 return;
             }
 
@@ -397,7 +452,7 @@ namespace SAIN.SAINComponent.Classes.Mover
 
             // If we arne't already sprinting, and our corner were moving to is far enough away, and I have enough stamina, and the angle isn't too sharp... enable sprint
             if (shallStartSprintStamina(staminaValue, urgency) && 
-                _timeStartCorner + 0.5f < Time.time)
+                _timeStartCorner + 0.25f < Time.time)
             {
                 Bot.Mover.EnableSprintPlayer(true);
                 CurrentRunStatus = RunStatus.Running;
@@ -412,8 +467,7 @@ namespace SAIN.SAINComponent.Classes.Mover
         private bool shallPauseSprintAngle()
         {
             Vector3? currentCorner = this.CurrentCornerDestination();
-            return currentCorner != null && 
-                checkShallPauseSprintFromTurn(currentCorner.Value, _moveSettings.BotSprintCurrentCornerAngleMax);
+            return currentCorner != null && checkShallPauseSprintFromTurn(currentCorner.Value, _moveSettings.BotSprintCurrentCornerAngleMax);
         }
 
         private bool shallPauseMoveAngle()
@@ -440,7 +494,7 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         private float findAngleFromLook(Vector3 end)
         {
-            Vector3 origin = Bot.Position;
+            Vector3 origin = BotOwner.WeaponRoot.position;
             Vector3 aDir = Bot.LookDirection;
             Vector3 bDir = end - origin;
             aDir.y = 0;
@@ -535,11 +589,11 @@ namespace SAIN.SAINComponent.Classes.Mover
 
             if (!BotOwner.DoorOpener.Interacting)
             {
-                if (shallSteerbyPriority())
+                if (shallLookAtEnemy())
                 {
-                    Bot.Steering.SteerByPriority();
+                    Bot.Steering.LookToEnemy(Bot.Enemy);
                 }
-                else
+                else if (!shallSteerbyPriority() || !Bot.Steering.SteerByPriority(false, true))
                 {
                     Bot.Steering.LookToDirection(targetLookDirNormal, true, turnSpeed);
                 }
@@ -555,6 +609,7 @@ namespace SAIN.SAINComponent.Classes.Mover
                 case RunStatus.Turning:
                 case RunStatus.FirstTurn:
                 case RunStatus.Running:
+                case RunStatus.ShortCorner:
                     return false;
 
                 default:

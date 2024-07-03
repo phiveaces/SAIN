@@ -3,7 +3,7 @@ using System;
 
 namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
 {
-    public class EnemyKnownChecker : EnemyBase, ISAINClass
+    public class EnemyKnownChecker : EnemyBase, IBotClass
     {
         public EnemyKnownChecker(Enemy enemy) : base(enemy)
         {

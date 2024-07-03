@@ -14,11 +14,11 @@ using static EFT.InventoryLogic.Weapon;
 
 namespace SAIN.SAINComponent.Classes.Info
 {
-    public class WeaponInfoClass : BotBaseClass, ISAINClass
+    public class WeaponInfoClass : BotBase, IBotClass
     {
         public float FinalModifier { get; private set; }
-        public IWeaponClass IWeaponClass { get; private set; }
-        public ICaliber ICaliber { get; private set; }
+        public EWeaponClass EWeaponClass { get; private set; }
+        public ECaliber ECaliber { get; private set; }
         public float SwapToSemiDist { get; private set; } = 50f;
         public float SwapToAutoDist { get; private set; } = 45f;
 
@@ -42,7 +42,7 @@ namespace SAIN.SAINComponent.Classes.Info
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(UpdatePresetSettings);
+            base.SubscribeToPreset(UpdatePresetSettings);
             Recoil.Init();
             Firerate.Init();
             Firemode.Init();
@@ -86,14 +86,14 @@ namespace SAIN.SAINComponent.Classes.Info
 
         private void calculateCurrentWeapon(Weapon weapon)
         {
-            IWeaponClass = EnumValues.ParseWeaponClass(weapon.Template.weapClass);
-            ICaliber = EnumValues.ParseCaliber(weapon.CurrentAmmoTemplate.Caliber);
+            EWeaponClass = EnumValues.ParseWeaponClass(weapon.Template.weapClass);
+            ECaliber = EnumValues.ParseCaliber(weapon.CurrentAmmoTemplate.Caliber);
             calculateShootModifier();
-            SwapToSemiDist = getWeaponSwapToSemiDist(ICaliber, IWeaponClass);
-            SwapToAutoDist = getWeaponSwapToFullAutoDist(ICaliber, IWeaponClass);
+            SwapToSemiDist = getWeaponSwapToSemiDist(ECaliber, EWeaponClass);
+            SwapToAutoDist = getWeaponSwapToFullAutoDist(ECaliber, EWeaponClass);
         }
 
-        private static float getAmmoShootability(ICaliber caliber)
+        private static float getAmmoShootability(ECaliber caliber)
         {
             if (_shootSettings.AmmoCaliberShootability.TryGetValue(caliber, out var ammo))
             {
@@ -102,7 +102,7 @@ namespace SAIN.SAINComponent.Classes.Info
             return 0.5f;
         }
 
-        private static float getWeaponShootability(IWeaponClass weaponClass)
+        private static float getWeaponShootability(EWeaponClass weaponClass)
         {
             if (_shootSettings.WeaponClassShootability.TryGetValue(weaponClass, out var weap))
             {
@@ -111,11 +111,11 @@ namespace SAIN.SAINComponent.Classes.Info
             return 0.5f;
         }
 
-        private static float getWeaponSwapToSemiDist(ICaliber caliber, IWeaponClass weaponClass)
+        private static float getWeaponSwapToSemiDist(ECaliber caliber, EWeaponClass weaponClass)
         {
             if (_shootSettings.AmmoCaliberFullAutoMaxDistances.TryGetValue(caliber, out var caliberDist))
             {
-                if (weaponClass == IWeaponClass.machinegun)
+                if (weaponClass == EWeaponClass.machinegun)
                 {
                     return caliberDist * 1.5f;
                 }
@@ -124,7 +124,7 @@ namespace SAIN.SAINComponent.Classes.Info
             return 55f;
         }
 
-        private static float getWeaponSwapToFullAutoDist(ICaliber caliber, IWeaponClass weaponClass)
+        private static float getWeaponSwapToFullAutoDist(ECaliber caliber, EWeaponClass weaponClass)
         {
             return getWeaponSwapToSemiDist(caliber, weaponClass) * 0.85f;
         }
@@ -134,12 +134,12 @@ namespace SAIN.SAINComponent.Classes.Info
             var weapInfo = Bot.Info.WeaponInfo;
 
             float AmmoCaliberModifier =
-                getAmmoShootability(ICaliber)
+                getAmmoShootability(ECaliber)
                 .Scale0to1(_shootSettings.AmmoCaliberScaling)
                 .Round100();
 
             float WeaponClassModifier =
-                getWeaponShootability(IWeaponClass)
+                getWeaponShootability(EWeaponClass)
                 .Scale0to1(_shootSettings.WeaponClassScaling)
                 .Round100();
 
@@ -179,11 +179,11 @@ namespace SAIN.SAINComponent.Classes.Info
         {
             get
             {
-                if (ICaliber == ICaliber.Caliber9x39)
+                if (ECaliber == ECaliber.Caliber9x39)
                 {
                     return 125f;
                 }
-                if (GlobalSettings.Shoot.EngagementDistance.TryGetValue(IWeaponClass, out float engagementDist))
+                if (GlobalSettings.Shoot.EngagementDistance.TryGetValue(EWeaponClass, out float engagementDist))
                 {
                     return engagementDist;
                 }

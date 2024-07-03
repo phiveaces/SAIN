@@ -22,7 +22,7 @@ namespace SAIN.Helpers
                 return 0.001f;
             }
 
-            if (component.ManualShoot.Reason != EShootReason.None && component.Info.WeaponInfo.IWeaponClass == IWeaponClass.machinegun)
+            if (component.ManualShoot.Reason != EShootReason.None && component.Info.WeaponInfo.EWeaponClass == EWeaponClass.machinegun)
             {
                 return 0.75f;
             }

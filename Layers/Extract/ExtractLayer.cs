@@ -1,4 +1,5 @@
 ﻿using EFT;
+using SAIN.Preset.GlobalSettings;
 using SAIN.SAINComponent;
 using SAIN.SAINComponent.Classes.Memory;
 using UnityEngine;
@@ -29,7 +30,7 @@ namespace SAIN.Layers
         {
             return 
                 Bot.Info.FileSettings.Mind.EnableExtracts &&
-                Bot.Info.GlobalSettings.Extract.EnableExtractsGlobal &&
+                GlobalSettingsClass.Instance.Extract.EnableExtractsGlobal &&
                 Components.BotController.BotExtractManager.IsBotAllowedToExfil(Bot);
         }
 

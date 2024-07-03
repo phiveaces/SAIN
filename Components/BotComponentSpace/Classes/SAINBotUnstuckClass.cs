@@ -11,7 +11,7 @@ using UnityEngine.AI;
 
 namespace SAIN.SAINComponent.Classes.Debug
 {
-    public class SAINBotUnstuckClass : BotBaseClass, ISAINClass
+    public class SAINBotUnstuckClass : BotBase, IBotClass
     {
         static SAINBotUnstuckClass()
         {
@@ -26,7 +26,7 @@ namespace SAIN.SAINComponent.Classes.Debug
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
             PathController = _pathControllerField.GetValue(BotOwner.Mover) as PathControllerClass;
             DontUnstuckMe = DontUnstuckTheseTypes.Contains(Bot.Info.Profile.WildSpawnType);
         }

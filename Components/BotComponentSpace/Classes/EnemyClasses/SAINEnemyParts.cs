@@ -38,7 +38,6 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
             return null;
         }
 
-
         public bool CheckBodyLineOfSight(Vector3 origin, float maxRange, out Vector3? successPoint)
         {
             if (LineOfSight)
@@ -48,6 +47,27 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
             }
 
             SAINEnemyPartData checkingPart = Parts[EBodyPart.Chest];
+            if (checkingPart.CheckLineOfSight(origin, maxRange, out successPoint))
+            {
+                if (successPoint != null)
+                    LastSuccessPosition = successPoint.Value;
+
+                _lastSuccessTime = Time.time;
+                return true;
+            }
+            successPoint = null;
+            return false;
+        }
+
+        public bool CheckHeadLineOfSight(Vector3 origin, float maxRange, out Vector3? successPoint)
+        {
+            if (LineOfSight)
+            {
+                successPoint = LastSuccessPosition;
+                return true;
+            }
+
+            SAINEnemyPartData checkingPart = Parts[EBodyPart.Head];
             if (checkingPart.CheckLineOfSight(origin, maxRange, out successPoint))
             {
                 if (successPoint != null)

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes
 {
-    public class CurrentTargetClass : BotBaseClass
+    public class CurrentTargetClass : BotBase
     {
         public bool HasTarget { get; private set; } 
         public CurrentTargetClass(BotComponent bot) : base(bot) { }

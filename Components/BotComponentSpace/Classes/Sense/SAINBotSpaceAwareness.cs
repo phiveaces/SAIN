@@ -26,7 +26,7 @@ namespace SAIN.SAINComponent.Classes
         public NavMeshPath ThirdPath;
     }
 
-    public class SAINBotSpaceAwareness : BotBaseClass, ISAINClass
+    public class SAINBotSpaceAwareness : BotBase, IBotClass
     {
         public SAINBotSpaceAwareness(BotComponent sain) : base(sain)
         {
@@ -34,7 +34,7 @@ namespace SAIN.SAINComponent.Classes
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
         }
 
         public void Update()

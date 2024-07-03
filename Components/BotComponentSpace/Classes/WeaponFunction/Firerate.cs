@@ -6,7 +6,7 @@ using Random = UnityEngine.Random;
 
 namespace SAIN.SAINComponent.Classes.WeaponFunction
 {
-    public class Firerate : BotBaseClass, ISAINClass
+    public class Firerate : BotBase, IBotClass
     {
         public Firerate(BotComponent sain) : base(sain)
         {
@@ -14,7 +14,7 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
         }
 
         public void Update()
@@ -70,11 +70,11 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
 
                 if (perMeterDictionary != null && weapInfo != null)
                 {
-                    if (perMeterDictionary.TryGetValue(weapInfo.IWeaponClass, out float perMeter))
+                    if (perMeterDictionary.TryGetValue(weapInfo.EWeaponClass, out float perMeter))
                     {
                         return perMeter;
                     }
-                    if (perMeterDictionary.TryGetValue(IWeaponClass.Default, out perMeter))
+                    if (perMeterDictionary.TryGetValue(EWeaponClass.Default, out perMeter))
                     {
                         return perMeter;
                     }

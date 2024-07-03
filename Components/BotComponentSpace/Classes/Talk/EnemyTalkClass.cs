@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Talk
 {
-    public class EnemyTalk : BotBaseClass, ISAINClass
+    public class EnemyTalk : BotBase, IBotClass
     {
         public EnemyTalk(BotComponent bot) : base(bot)
         {
@@ -21,7 +21,7 @@ namespace SAIN.SAINComponent.Classes.Talk
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(UpdatePresetSettings);
+            base.SubscribeToPreset(UpdatePresetSettings);
             if (Singleton<BotEventHandler>.Instance != null)
             {
                 Singleton<BotEventHandler>.Instance.OnGrenadeExplosive += tryFakeDeathGrenade;

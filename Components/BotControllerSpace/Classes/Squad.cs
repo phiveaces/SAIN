@@ -100,13 +100,11 @@ namespace SAIN.BotController.Classes
             Flashlight,
         }
 
-        public Action<PlaceForCheck> OnSoundHeard { get; set; }
+        public Action<EnemyPlace, Enemy, SAINSoundType> OnEnemyHeard { get; set; }
 
-        public Action<EnemyPlace, Enemy> OnEnemyHeard { get; set; }
-
-        public void AddPointToSearch(BotSound sound, BotComponent sain)
+        public void AddPointToSearch(BotSoundStruct sound, BotComponent sain)
         {
-            Enemy enemy = sound.Enemy;
+            Enemy enemy = sound.Info.Enemy;
             if (enemy == null)
             {
                 Logger.LogError($"Could not find enemy!");
@@ -114,7 +112,7 @@ namespace SAIN.BotController.Classes
             }
 
             enemy.Hearing.LastSoundHeard = sound;
-            addPlaceForCheck(sound.RandomizedPosition, sound.SoundType, sain, enemy, true);
+            addPlaceForCheck(sound.Results.EstimatedPosition, sound.Info.SoundType, sain, enemy, true);
         }
 
         private void addPlaceForCheck(Vector3 position, SAINSoundType soundType, BotComponent bot, Enemy enemy, bool heard)
@@ -128,14 +126,10 @@ namespace SAIN.BotController.Classes
             bool isDanger = baseSoundType == AISoundType.step ? false : true;
             PlaceForCheckType checkType = isDanger ? PlaceForCheckType.danger : PlaceForCheckType.simple;
             PlaceForCheck newPlace = AddNewPlaceForCheck(bot.BotOwner, position, checkType, enemy.EnemyIPlayer);
-            if (newPlace != null)
-            {
-                enemy.Hearing.SetHeard(newPlace.Position, soundType, true);
-                if (heard)
-                    OnSoundHeard?.Invoke(newPlace);
-                return;
-            }
-            enemy.Hearing.SetHeard(position, soundType, true);
+            Vector3 pos = newPlace?.Position ?? position;
+            EnemyPlace place = enemy.Hearing.SetHeard(pos, soundType, true);
+            if (heard)
+                OnEnemyHeard?.Invoke(place, enemy, soundType);
         }
 
         public void AddPointToSearch(Vector3 position, float soundPower, BotComponent sain, AISoundType soundType, IPlayer player, ESearchPointType searchType = ESearchPointType.Hearing)

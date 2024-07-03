@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Talk
 {
-    public class SAINBotTalkClass : BotBaseClass, ISAINClass
+    public class SAINBotTalkClass : BotBase, IBotClass
     {
         public SAINBotTalkClass(BotComponent sain) : base(sain)
         {

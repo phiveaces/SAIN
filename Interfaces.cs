@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace SAIN
 {
-    public interface ISAINClass
+    public interface IBotClass
     {
         BotComponent Bot { get; }
 

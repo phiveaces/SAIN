@@ -10,7 +10,7 @@ namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
         public bool Heard { get; private set; }
         public bool EnemyHeardFromPeace { get; set; }
         public float TimeSinceHeard => Time.time - _timeLastHeard;
-        public BotSound LastSoundHeard { get; set; }
+        public BotSoundStruct? LastSoundHeard { get; set; }
         public Vector3? LastHeardPosition { get; private set; }
 
         private const float REPORT_HEARD_FREQUENCY = 1f;
@@ -52,7 +52,7 @@ namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
             }
         }
 
-        public void SetHeard(Vector3 pos, SAINSoundType soundType, bool shallReport)
+        public EnemyPlace SetHeard(Vector3 pos, SAINSoundType soundType, bool shallReport)
         {
             if (Enemy.IsVisible)
             {
@@ -63,7 +63,7 @@ namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
             Enemy.Status.HeardRecently = true;
             _timeLastHeard = Time.time;
 
-            UpdateHeardPosition(pos, wasGunfire, shallReport);
+            EnemyPlace place = UpdateHeardPosition(pos, wasGunfire, shallReport);
 
             if (!Bot.HasEnemy)
                 EnemyHeardFromPeace = true;
@@ -71,9 +71,10 @@ namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
             Enemy.Events.EnemyHeard(soundType, wasGunfire);
             if (wasGunfire || !shallReport)
             {
-                return;
+                return place;
             }
             updateEnemyAction(soundType, pos);
+            return place;
         }
 
         private void updateEnemyAction(SAINSoundType soundType, Vector3 soundPosition)
@@ -115,7 +116,7 @@ namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
             }
         }
 
-        public void UpdateHeardPosition(Vector3 position, bool wasGunfire, bool shallReport)
+        public EnemyPlace UpdateHeardPosition(Vector3 position, bool wasGunfire, bool shallReport)
         {
             EnemyPlace place = Enemy.KnownPlaces.UpdatePersonalHeardPosition(position, wasGunfire);
             if (shallReport &&
@@ -125,6 +126,7 @@ namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
                 _nextReportHeardTime = Time.time + REPORT_HEARD_FREQUENCY;
                 Bot.Squad?.SquadInfo?.ReportEnemyPosition(Enemy, place, false);
             }
+            return place;
         }
 
         private float _nextReportHeardTime;

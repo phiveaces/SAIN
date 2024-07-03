@@ -2,6 +2,7 @@
 {
     public enum ESoundDispersionType
     {
+        None,
         Footstep,
         HeardShot,
         HeardSuppressedShot,

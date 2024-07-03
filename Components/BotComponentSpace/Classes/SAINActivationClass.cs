@@ -5,7 +5,7 @@ using System;
 
 namespace SAIN.SAINComponent.Classes
 {
-    public class SAINActivationClass : BotBaseClass, ISAINClass
+    public class SAINActivationClass : BotBase, IBotClass
     {
         public event Action<bool> OnBotStateChanged;
 

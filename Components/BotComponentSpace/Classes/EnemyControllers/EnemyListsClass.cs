@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SAIN.SAINComponent.Classes.EnemyClasses
 {
-    public class EnemyListsClass : BotSubClassBase<SAINEnemyController>, ISAINClass
+    public class EnemyListsClass : BotSubClass<SAINEnemyController>, IBotClass
     {
         public readonly Dictionary<EEnemyListType, EnemyList> EnemyLists = new Dictionary<EEnemyListType, EnemyList>();
 

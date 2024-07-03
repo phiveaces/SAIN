@@ -4,13 +4,13 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.Decision
 {
-    public class DogFightDecisionClass : BotBaseClass, ISAINClass
+    public class DogFightDecisionClass : BotBase, IBotClass
     {
         public DogFightDecisionClass(BotComponent bot) : base(bot) { }
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
             Bot.EnemyController.Events.OnEnemyRemoved += checkClear;
         }
 

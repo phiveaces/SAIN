@@ -191,7 +191,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
                 }
 
                 // We should always have a not null LastKnownPosition here, but have the real position as a fallback just in case
-                Vector3 enemyPosition = Enemy.KnownPlaces.LastKnownPosition ?? EnemyPosition;
+                Vector3 enemyPosition = Enemy.KnownPlaces.LastKnownPosition ?? EnemyCurrentPosition;
                 Vector3 botPosition = Bot.Position;
 
                 // Did we already check the current enemy position and has the bot not moved? dont recalc path then

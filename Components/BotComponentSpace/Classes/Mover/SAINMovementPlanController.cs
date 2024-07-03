@@ -9,7 +9,7 @@ using static UnityEngine.UI.GridLayoutGroup;
 
 namespace SAIN.SAINComponent.Classes.Mover
 {
-    public class SAINMovementPlanController : BotBaseClass, ISAINClass
+    public class SAINMovementPlanController : BotBase, IBotClass
     {
         public SAINMovementPlanController(BotComponent sain) : base(sain)
         {
@@ -19,7 +19,7 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
         }
 
         public void Update()

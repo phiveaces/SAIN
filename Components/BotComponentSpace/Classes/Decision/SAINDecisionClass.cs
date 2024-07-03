@@ -6,7 +6,7 @@ using UnityEngine.AI;
 
 namespace SAIN.SAINComponent.Classes.Decision
 {
-    public class SAINDecisionClass : BotBaseClass, ISAINClass
+    public class SAINDecisionClass : BotBase, IBotClass
     {
         public event Action<SoloDecision, SquadDecision, SelfDecision, float> OnDecisionMade;
 
@@ -66,7 +66,7 @@ namespace SAIN.SAINComponent.Classes.Decision
 
         public void Init()
         {
-            base.SubscribeToPresetChanges(null);
+            base.SubscribeToPreset(null);
             Bot.BotActivation.OnBotStateChanged += resetDecisions;
             DogFightDecision.Init();
         }

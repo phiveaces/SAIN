@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.WeaponFunction
 {
-    public class AimDownSightsController : BotBaseClass, ISAINClass
+    public class AimDownSightsController : BotBase, IBotClass
     {
         public AimDownSightsController(BotComponent sain) : base(sain)
         {
