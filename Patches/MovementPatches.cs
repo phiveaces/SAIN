@@ -6,7 +6,7 @@ using System.Reflection;
 using UnityEngine;
 using StaminaClass = BackendConfigSettingsClass.GClass1376;
 using BotMovementControllerClass = GClass422;
-using PlayerPhysicalClass = GClass681;
+//using PlayerPhysicalClass = GClass681;
 
 namespace SAIN.Patches.Movement
 {

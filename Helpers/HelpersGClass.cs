@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
-using EFTCore = GClass530;
 using EFTCoreContainer = GClass531;
 using EFTFileSettings = BotSettingsComponents;
 using EFTSettingsGroup = GClass458;
@@ -57,7 +56,7 @@ namespace SAIN.Helpers
             return (PathControllerClass)PathControllerField.GetValue(botMover);
         }
 
-        public static EFTCore EFTCore => EFTCoreContainer.Core;
+        public static global::CoreBotSettingsClass EFTCore => EFTCoreContainer.Core;
         public static float Gravity => EFTCore.G;
         public static float SMOKE_GRENADE_RADIUS_COEF => EFTCore.SMOKE_GRENADE_RADIUS_COEF;
     }
@@ -119,7 +118,7 @@ namespace SAIN.Helpers
             EFTCoreContainer.Core.ARMOR_CLASS_COEF = coef;
         }
 
-        public EFTCore Core;
+        public global::CoreBotSettingsClass Core;
     }
 
     public class EFTBotSettings

@@ -37,7 +37,7 @@ namespace SAIN.Patches.Hearing
         }
 
         [PatchPostfix]
-        public static void Patch(Vector3 soundPosition, BetterSource source, GInterface106 player, SoundBank ____soundBank)
+        public static void Patch(Vector3 soundPosition, BetterSource source, IPlayerOwner player, SoundBank ____soundBank)
         {
             if (player.iPlayer != null)
             {

@@ -146,7 +146,7 @@ namespace SAIN.SAINComponent
 
             try
             {
-                person.Player.GClass2777_0.Inventory.TotalWeight = new GClass755<float>(new Func<float>(this.getBotTotalWeight));
+                person.Player.InventoryControllerClass.Inventory.TotalWeight = new GClass755<float>(new Func<float>(this.getBotTotalWeight));
                 person.Player.Physical.EncumberDisabled = false;
             }
             catch (Exception ex)
