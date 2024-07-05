@@ -58,10 +58,10 @@ namespace SAIN.Preset.GlobalSettings
 
         [Advanced]
         [MinMax(1f, 500f, 1f)]
-        public float BotSprintTurnSpeed = 300f;
+        public float BotSprintTurnSpeedWhileSprint = 300f;
 
         [Advanced]
         [MinMax(1f, 500f, 1f)]
-        public float BotSprintFirstTurnSpeed = 400f;
+        public float BotSprintTurningSpeed = 400f;
     }
 }

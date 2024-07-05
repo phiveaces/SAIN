@@ -32,7 +32,7 @@ namespace SAIN.Helpers.Events
 
     public class ToggleEventForObjectTimeTracked<T> : ToggleEventTimeTrackBase
     {
-        public event Action<bool, T> OnToggle;
+        public Action<bool, T> OnToggle;
 
         public void CheckToggle(bool value)
         {
@@ -53,7 +53,7 @@ namespace SAIN.Helpers.Events
 
     public class ToggleEventForObject<T> : ToggleEventBase
     {
-        public event Action<bool, T> OnToggle;
+        public Action<bool, T> OnToggle;
 
         public bool CheckToggle(bool value)
         {
@@ -76,7 +76,7 @@ namespace SAIN.Helpers.Events
 
     public class ToggleEvent : ToggleEventBase
     {
-        public event Action<bool> OnToggle;
+        public Action<bool> OnToggle;
 
         public void CheckToggle(bool value)
         {
@@ -92,7 +92,7 @@ namespace SAIN.Helpers.Events
 
     public class ToggleEventTimeTracked : ToggleEventTimeTrackBase
     {
-        public event Action<bool> OnToggle;
+        public Action<bool> OnToggle;
 
         public void CheckToggle(bool value)
         {
@@ -108,13 +108,16 @@ namespace SAIN.Helpers.Events
 
     public class ToggleEvent<A> : ToggleEventBase
     {
-        public event Action<bool, A> OnToggle;
+        public Action<bool, A> OnToggle;
 
-        public void Toggle(bool value, A a)
+        public A TypeValue { get; private set; }
+
+        public void CheckToggle(bool value, A a)
         {
             if (Value != value)
             {
                 base.SetValue(value);
+                TypeValue = a;
                 OnToggle?.Invoke(value, a);
             }
         }
@@ -124,9 +127,9 @@ namespace SAIN.Helpers.Events
 
     public class ToggleEvent<A, B> : ToggleEventBase
     {
-        public event Action<bool, A, B> OnToggle;
+        public Action<bool, A, B> OnToggle;
 
-        public void Toggle(bool value, A a, B b)
+        public void CheckToggle(bool value, A a, B b)
         {
             if (Value != value)
             {
@@ -140,9 +143,9 @@ namespace SAIN.Helpers.Events
 
     public class ToggleEvent<A, B, C> : ToggleEventBase
     {
-        public event Action<bool, A, B, C> OnToggle;
+        public Action<bool, A, B, C> OnToggle;
 
-        public void Toggle(bool value, A a, B b, C c)
+        public void CheckToggle(bool value, A a, B b, C c)
         {
             if (Value != value)
             {

@@ -26,11 +26,8 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
 
         public void Update()
         {
-            EnemyParts.Update();
-            if (Enemy.Events.OnEnemyLineOfSightChanged.CheckToggle(LineOfSight))
-            {
-                //Logger.LogDebug($"los changed");
-            }
+            EnemyParts.Update(); 
+            Enemy.Events.OnEnemyLineOfSightChanged.CheckToggle(LineOfSight);
         }
 
         public void Dispose()

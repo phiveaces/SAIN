@@ -1,4 +1,5 @@
 ﻿using EFT;
+using SAIN.Helpers.Events;
 using SAIN.SAINComponent.SubComponents.CoverFinder;
 using System;
 using UnityEngine;
@@ -10,9 +11,9 @@ namespace SAIN.SAINComponent.Classes.Decision
     {
         public event Action<SoloDecision, SquadDecision, SelfDecision, float> OnDecisionMade;
 
-        public event Action<bool> OnSAINStatusChanged;
+        public bool HasDecision => HasDecisionToggle.Value;
+        public ToggleEvent HasDecisionToggle { get; } = new ToggleEvent();
 
-        public bool HasDecision { get; private set; }
 
         public SoloDecision CurrentSoloDecision { get; private set; }
         public SoloDecision PreviousSoloDecision { get; private set; }
@@ -67,7 +68,7 @@ namespace SAIN.SAINComponent.Classes.Decision
         public void Init()
         {
             base.SubscribeToPreset(null);
-            Bot.BotActivation.OnBotStateChanged += resetDecisions;
+            Bot.BotActivation.BotActiveToggle.OnToggle += resetDecisions;
             DogFightDecision.Init();
         }
 
@@ -90,7 +91,7 @@ namespace SAIN.SAINComponent.Classes.Decision
 
         public void Dispose()
         {
-            Bot.BotActivation.OnBotStateChanged -= resetDecisions;
+            Bot.BotActivation.BotActiveToggle.OnToggle -= resetDecisions;
             DogFightDecision?.Dispose();
         }
 
@@ -160,48 +161,22 @@ namespace SAIN.SAINComponent.Classes.Decision
                 }
             }
 
-            if (updateLastDecisions(solo, squad, self))
+            if (checkForNewDecision(solo, squad, self))
             {
-                HasDecision =
-                    CurrentSoloDecision != SoloDecision.None ||
-                    CurrentSelfDecision != SelfDecision.None ||
-                    CurrentSquadDecision != SquadDecision.None;
+                bool hasDecision =
+                    solo != SoloDecision.None ||
+                    self != SelfDecision.None ||
+                    squad != SquadDecision.None;
 
-                _hasLastDecision =
-                    PreviousSoloDecision != SoloDecision.None ||
-                    PreviousSelfDecision != SelfDecision.None ||
-                    PreviousSquadDecision != SquadDecision.None;
+                HasDecisionToggle.CheckToggle(hasDecision);
 
                 TotalDecisionsMade++;
-                DecisionsMadeThisFight++;
                 ChangeDecisionTime = Time.time;
                 OnDecisionMade?.Invoke(solo, squad, self, Time.time);
-                checkSAINStartAndEnd(); 
             }
         }
 
-        private void checkSAINStartAndEnd()
-        {
-            bool hasDecision = HasDecision;
-            bool hasLastDecision = _hasLastDecision;
-
-            // If previously all decisions were none, sain has now started.
-            if (!hasLastDecision && 
-                hasDecision)
-            {
-                OnSAINStatusChanged?.Invoke(true);
-                //Logger.LogDebug($"{BotOwner.name} Has Decision. SAIN Awake.");
-            }
-            if (hasLastDecision && 
-                !hasDecision)
-            {
-                OnSAINStatusChanged?.Invoke(false);
-                //Logger.LogDebug($"{BotOwner.name} Has no Decision. SAIN Sleep.");
-                DecisionsMadeThisFight = 0;
-            }
-        }
-
-        private bool updateLastDecisions(SoloDecision newSoloDecision, SquadDecision newSquadDecision, SelfDecision newSelfDecision)
+        private bool checkForNewDecision(SoloDecision newSoloDecision, SquadDecision newSquadDecision, SelfDecision newSelfDecision)
         {
             bool newDecision = false;
 
@@ -241,7 +216,7 @@ namespace SAIN.SAINComponent.Classes.Decision
 
         private void resetDecisions(bool value)
         {
-            if (!value && HasDecision)
+            if (!value)
             {
                 SetDecisions(SoloDecision.None, SquadDecision.None, SelfDecision.None);
             }
@@ -361,8 +336,6 @@ namespace SAIN.SAINComponent.Classes.Decision
         private float _nextCalcPathTime;
         private float _calcPathFreq = 0.5f;
         private float _grenadePathDist;
-
-        private bool _hasLastDecision;
 
         public static readonly SoloDecision[] RETREAT_DECISIONS =
         { 

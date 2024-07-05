@@ -60,14 +60,14 @@ namespace SAIN.SAINComponent.Classes.Search
                 reasons.NotWantToSearchReason = ENotWantToSearchReason.NullEnemy;
                 return false;
             }
-            if (!enemy.Seen && !enemy.Heard)
+            if (enemy.LastKnownPosition == null)
             {
-                reasons.NotWantToSearchReason = ENotWantToSearchReason.NullEnemy;
+                reasons.NotWantToSearchReason = ENotWantToSearchReason.NullLastKnown;
                 return false;
             }
             if (!enemy.Seen && !Bot.Info.PersonalitySettings.Search.WillSearchFromAudio)
             {
-                reasons.NotWantToSearchReason = ENotWantToSearchReason.NullEnemy;
+                reasons.NotWantToSearchReason = ENotWantToSearchReason.WontSearchFromAudio;
                 return false;
             }
             if (!canStartSearch(enemy, out reasons.CantStartReason))

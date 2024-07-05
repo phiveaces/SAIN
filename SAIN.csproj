@@ -243,6 +243,9 @@
     <None Include="Plugin\VersionChecker\setbuild.ps1" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\BotComponentSpace\BotComponentBase.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Doors\DoorData.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Doors\DoorFinder.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\EnemyClasses\ECornerType.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\EnemyClasses\EnemyActiveThreatChecker.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\EnemyClasses\EnemyCornerDictionary.cs" />
@@ -254,6 +257,7 @@
     <Compile Include="Components\BotComponentSpace\Classes\EnemyControllers\EnemyControllerEvents.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\EnemyControllers\EnemyListController.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Mover\ObstacleAgent.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\BotWeightManagement.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\HearingAnalysisClass.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\HearingBulletAnalysisClass.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Sense\Hearing\HearingDispersionClass.cs" />
@@ -448,7 +452,7 @@
     <Compile Include="Components\BotComponentSpace\Classes\EnemyClasses\EnemyPlace.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Search\ESearchMove.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Mover\DogFight.cs" />
-    <Compile Include="Components\BotComponentSpace\Classes\Mover\SAINDoorOpener.cs" />
+    <Compile Include="Components\BotComponentSpace\Classes\Doors\DoorOpener.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Mover\SAINMovementPlanController.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Mover\SAINSprint.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Mover\SAINVaultClass.cs" />
@@ -587,7 +591,6 @@
     <Compile Include="Patches\VisionPatches.cs" />
     <Compile Include="Patches\MovementPatches.cs" />
     <Compile Include="Patches\Shoot\RateofFirePatch.cs" />
-    <Compile Include="Patches\Shoot\RecoilPatch.cs" />
     <Compile Include="Patches\TalkPatches.cs" />
     <Compile Include="Components\PlayerComponentSpace\Classes\FlashLightClass.cs" />
     <Compile Include="Components\BotComponentSpace\Classes\Decision\SAINSelfActionClass.cs" />

@@ -1,4 +1,5 @@
 ﻿using EFT;
+using SAIN.Components;
 using SAIN.Helpers;
 using SAIN.Plugin;
 using SAIN.Preset;
@@ -10,7 +11,7 @@ using UnityEngine.AI;
 
 namespace SAIN.SAINComponent.SubComponents.CoverFinder
 {
-    public class CoverFinderComponent : MonoBehaviour
+    public class CoverFinderComponent : BotComponentBase
     {
         public CoverFinderStatus CurrentStatus { get; private set; }
 
@@ -54,7 +55,6 @@ namespace SAIN.SAINComponent.SubComponents.CoverFinder
         }
 
         public BotComponent Bot { get; private set; }
-        public BotOwner BotOwner => Bot.BotOwner;
         public List<CoverPoint> CoverPoints { get; } = new List<CoverPoint>();
         private CoverAnalyzer CoverAnalyzer { get; set; }
         private ColliderFinder ColliderFinder { get; set; }
@@ -101,15 +101,29 @@ namespace SAIN.SAINComponent.SubComponents.CoverFinder
 
         public void Init(BotComponent botComponent)
         {
+            base.Init(botComponent.Person);
             Bot = botComponent;
-            ProfileId = botComponent.ProfileId;
             BotName = botComponent.name;
 
             ColliderFinder = new ColliderFinder(this);
-            CoverAnalyzer = new CoverAnalyzer(Bot, this);
+            CoverAnalyzer = new CoverAnalyzer(botComponent, this);
 
-            botComponent.BotActivation.OnBotStateChanged += ToggleCoverFinder;
-            botComponent.OnSAINDisposed += botDisposed;
+            botComponent.BotActivation.BotActiveToggle.OnToggle += botEnabled;
+            botComponent.BotActivation.BotStandByToggle.OnToggle += botInStandBy;
+            botComponent.OnDispose += botDisposed;
+        }
+
+        private void botInStandBy(bool value)
+        {
+            if (value)
+            {
+                ToggleCoverFinder(false);
+            }
+        }
+
+        private void botEnabled(bool value)
+        {
+            ToggleCoverFinder(value);
         }
 
         public void ToggleCoverFinder(bool value)
@@ -560,14 +574,15 @@ namespace SAIN.SAINComponent.SubComponents.CoverFinder
             Dispose();
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
             StopLooking();
             StopAllCoroutines();
             if (Bot != null)
             {
-                Bot.OnSAINDisposed -= botDisposed;
-                Bot.BotActivation.OnBotStateChanged -= ToggleCoverFinder;
+                Bot.OnDispose -= botDisposed;
+                Bot.BotActivation.BotActiveToggle.OnToggle -= ToggleCoverFinder;
             }
             Destroy(this);
         }
@@ -576,7 +591,6 @@ namespace SAIN.SAINComponent.SubComponents.CoverFinder
         private Vector3 _origin;
         private float _sampleTargetTime;
         private readonly Collider[] _colliderArray = new Collider[300];
-        private string ProfileId;
         private int _targetCount;
         private float _nextUpdateTargetTime;
         private Vector3 _targetPoint;

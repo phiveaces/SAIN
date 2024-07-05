@@ -2,9 +2,10 @@
 using EFT;
 using EFT.Game.Spawning;
 using HarmonyLib;
+using EFT.Interactive;
 using SAIN.Components.PlayerComponentSpace;
 using SAIN.Helpers;
-using SAIN.Patches.Generic;
+using SAIN.Preset.GlobalSettings;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -26,6 +27,7 @@ namespace SAIN.Components
 
         private void Update()
         {
+            checkDoors();
             findWeather();
             findLocation();
             findSpawnPointMarkers();
@@ -55,6 +57,69 @@ namespace SAIN.Components
                 _weatherFound = true;
             }
         }
+
+        private void checkDoors()
+        {
+            if (!_doorsDisabled &&
+                GlobalSettingsClass.Instance.General.DisableAllDoors)
+            {
+                _doorsDisabled = true; 
+                disableDoors();
+                return;
+            }
+            if (_doorsDisabled &&
+                !GlobalSettingsClass.Instance.General.DisableAllDoors)
+            {
+                _doorsDisabled = false;
+                enableDoors();
+                return;
+            }
+        }
+
+        private void disableDoors()
+        {
+            int doorCount = 0;
+            // Code taken from Drakia's Door Randomizer Mod
+            FindObjectsOfType<Door>().ExecuteForEach(door =>
+            {
+                // We don't support doors that don't start open/closed
+                if (door.DoorState != EDoorState.Open && door.DoorState != EDoorState.Shut)
+                    return;
+
+                // We don't support non-operatable doors
+                if (!door.Operatable || !door.enabled)
+                    return;
+
+                // We don't support doors that aren't on the "Interactive" layer
+                if (door.gameObject.layer != LayerMaskClass.InteractiveLayer)
+                    return;
+
+                doorCount++;
+                door.gameObject.SmartDisable();
+                door.enabled = false;
+                _disabledDoors.Add(door);
+            });
+
+            _doorsDisabled = true;
+            Logger.LogDebug($"Disabled Doors: {doorCount}");
+        }
+
+
+        private void enableDoors()
+        {
+            int doorCount = 0;
+            foreach (var door in _disabledDoors)
+            {
+                door.gameObject.SmartEnable();
+                door.enabled = true;
+            }
+            _disabledDoors.Clear();
+            _doorsDisabled = false;
+            Logger.LogDebug($"Enabled Doors: {doorCount}");
+        }
+
+        private bool _doorsDisabled;
+        private readonly List<Door> _disabledDoors = new List<Door>();
 
         private bool _weatherFound;
         private float _nextCheckWeatherTime;
@@ -236,14 +301,9 @@ namespace SAIN.Components
             return gameWorld;
         }
 
-        private void OnDestroy()
-        {
-            Instance = null;
-            Dispose();
-        }
-
         public void Dispose()
         {
+            Instance = null;
             try
             {
                 PlayerTracker?.Dispose();

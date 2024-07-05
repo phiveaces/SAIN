@@ -72,6 +72,22 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
 
         private bool getModeToSwap(WeaponInfoClass weaponInfo, out EFireMode mode)
         {
+            if (Bot.IsCheater)
+            {
+                if (weaponInfo.HasFireMode(EFireMode.fullauto))
+                {
+                    mode = EFireMode.fullauto;
+                    return true;
+                }
+                if (weaponInfo.HasFireMode(EFireMode.burst))
+                {
+                    mode = EFireMode.burst;
+                    return true;
+                }
+                mode = EFireMode.doublet;
+                return false;
+            }
+
             float distance = Bot.DistanceToAimTarget;
             mode = EFireMode.doublet;
             if (distance > SemiAutoSwapDist)

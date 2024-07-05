@@ -48,11 +48,14 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
 
         public void Dispose()
         {
+            // must be first, so all enemies are removed properly and their events are triggered!
+            _listController.Dispose();
+
             GameObject.Destroy(_enemyUpdater);
             Events.Dispose();
+
             EnemyLists.Dispose();
             _enemyChooser.Dispose();
-            _listController.Dispose();
         }
 
         private void updateDebug()

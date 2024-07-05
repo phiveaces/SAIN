@@ -185,7 +185,6 @@ namespace SAIN.Plugin
                     var easy = pmcSettings[BotDifficulty.easy];
                     easy.Aiming.FasterCQBReactionsDistance = 20f;
                     easy.Aiming.FasterCQBReactionsMinimum = 0.3f;
-                    easy.Aiming.AccuracySpreadMulti = 0.9f;
                     easy.Aiming.MAX_AIMING_UPGRADE_BY_TIME = 0.35f;
                     easy.Aiming.MAX_AIM_TIME = 1.5f;
                     easy.Aiming.BASE_HIT_AFFECTION_DELAY_SEC = 0.65f;
@@ -194,7 +193,6 @@ namespace SAIN.Plugin
                     var normal = pmcSettings[BotDifficulty.normal];
                     normal.Aiming.FasterCQBReactionsDistance = 35f;
                     normal.Aiming.FasterCQBReactionsMinimum = 0.25f;
-                    normal.Aiming.AccuracySpreadMulti = 0.85f;
                     normal.Aiming.MAX_AIMING_UPGRADE_BY_TIME = 0.4f;
                     normal.Aiming.MAX_AIM_TIME = 1.35f;
                     normal.Aiming.BASE_HIT_AFFECTION_DELAY_SEC = 0.5f;
@@ -203,7 +201,6 @@ namespace SAIN.Plugin
                     var hard = pmcSettings[BotDifficulty.hard];
                     hard.Aiming.FasterCQBReactionsDistance = 50f;
                     hard.Aiming.FasterCQBReactionsMinimum = 0.2f;
-                    hard.Aiming.AccuracySpreadMulti = 0.8f;
                     hard.Aiming.MAX_AIMING_UPGRADE_BY_TIME = 0.2f;
                     hard.Aiming.MAX_AIM_TIME = 1.15f;
                     hard.Aiming.BASE_HIT_AFFECTION_DELAY_SEC = 0.35f;
@@ -212,7 +209,6 @@ namespace SAIN.Plugin
                     var impossible = pmcSettings[BotDifficulty.impossible];
                     impossible.Aiming.FasterCQBReactionsDistance = 60f;
                     impossible.Aiming.FasterCQBReactionsMinimum = 0.15f;
-                    impossible.Aiming.AccuracySpreadMulti = 0.75f;
                     impossible.Aiming.MAX_AIMING_UPGRADE_BY_TIME = 0.15f;
                     impossible.Aiming.MAX_AIM_TIME = 1.0f;
                     impossible.Aiming.BASE_HIT_AFFECTION_DELAY_SEC = 0.25f;

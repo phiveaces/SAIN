@@ -30,7 +30,7 @@ namespace SAIN.SAINComponent
             {
                 func.Invoke(SAINPresetClass.Instance);
                 _autoUpdater.Subscribe(func);
-                Bot.OnSAINDisposed += this.UnSubscribeToPreset;
+                Bot.OnDispose += this.UnSubscribeToPreset;
             }
         }
 
@@ -39,7 +39,7 @@ namespace SAIN.SAINComponent
             if (_autoUpdater.Subscribed)
             {
                 _autoUpdater.UnSubscribe();
-                Bot.OnSAINDisposed -= this.UnSubscribeToPreset;
+                Bot.OnDispose -= this.UnSubscribeToPreset;
             }
         }
 

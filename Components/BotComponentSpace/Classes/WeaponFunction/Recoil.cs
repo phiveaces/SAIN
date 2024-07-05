@@ -22,7 +22,7 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
 
         public void Init()
         {
-            Bot.BotActivation.OnBotStateChanged += removeCoroutine;
+            Bot.BotActivation.BotActiveToggle.OnToggle += removeCoroutine;
         }
 
         private float calcModFromInjury(EInjurySeverity severity)
@@ -151,11 +151,15 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
 
         public void Dispose()
         {
-            Bot.BotActivation.OnBotStateChanged -= removeCoroutine;
+            Bot.BotActivation.BotActiveToggle.OnToggle -= removeCoroutine;
         }
 
         public void WeaponShot()
         {
+            if (Bot.IsCheater)
+            {
+                return;
+            }
             calculateRecoil();
             _barrelRising = true;
             _recoilFinished = false;

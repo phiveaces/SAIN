@@ -27,6 +27,8 @@ namespace SAIN.SAINComponent.SubComponents.CoverFinder
             PathLength = pathLength;
         }
 
+        public bool IsCurrent => Bot.Cover.CoverInUse == this;
+
         private readonly BotComponent Bot;
 
         public Vector3 Position
@@ -51,7 +53,7 @@ namespace SAIN.SAINComponent.SubComponents.CoverFinder
         public Vector3 ColliderPosition => Collider.transform.position;
 
         public float TimeLastUpdated;
-        public bool ShallUpdate => Time.time - TimeLastUpdated > 0.5f;
+        public bool ShallUpdate => Time.time - TimeLastUpdated > (IsCurrent ? 0.2f : 0.5f);
 
         public int RoundedPathLength { get; private set; }
 

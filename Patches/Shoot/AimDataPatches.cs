@@ -37,11 +37,19 @@ namespace SAIN.Patches.Shoot.Aim
                 return true;
             }
 
+            Vector3 realTargetPoint = ___botOwner_0.AimingData.RealTargetPoint;
+            if (bot.IsCheater)
+            {
+                _endTargetPointProp.SetValue(___botOwner_0.AimingData, realTargetPoint);
+                return false;
+            }
+
             float aimUpgradeByTime = ___float_13;
+
             Vector3 badShootOffset = ___vector3_5;
             Vector3 aimOffset = ___vector3_4;
             Vector3 recoilOffset = bot.Info.WeaponInfo.Recoil.CurrentRecoilOffset;
-            Vector3 realTargetPoint = ___botOwner_0.AimingData.RealTargetPoint;
+
             IPlayer person = ___botOwner_0?.Memory?.GoalEnemy?.Person;
 
             // Applies aiming offset, recoil offset, and scatter offsets

@@ -19,7 +19,12 @@ namespace SAIN.Helpers
 
             if (component == null)
             {
-                return 0.001f;
+                return 0.1f;
+            }
+
+            if (component.IsCheater)
+            {
+                return 1f;
             }
 
             if (component.ManualShoot.Reason != EShootReason.None && component.Info.WeaponInfo.EWeaponClass == EWeaponClass.machinegun)

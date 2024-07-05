@@ -171,22 +171,24 @@ namespace SAIN.Layers
                                 $"Next: {sain.Search.NextState} " +
                                 $"Last: {sain.Search.LastState}",
                                 Color.white, Color.yellow, true);
+                        else
+                        {
+                            var reasons = enemyDecisions.DebugSearchReasons;
+                            var wantReasons = reasons.WantSearchReasons;
+                            stringBuilder.AppendLabeledValue("Want Search Reasons",
+                                $"[WantToSearchReason : {wantReasons.WantToSearchReason}] " +
+                                $"[NotWantToSearchReason: {wantReasons.NotWantToSearchReason}] " +
+                                $"[CantStartReason: {wantReasons.CantStartReason}]",
+                                Color.white, Color.yellow, true);
 
-                        var reasons = enemyDecisions.DebugSearchReasons;
-                        var wantReasons = reasons.WantSearchReasons;
-                        stringBuilder.AppendLabeledValue("Want Search Reasons",
-                            $"[WantToSearchReason : {wantReasons.WantToSearchReason}] " +
-                            $"[NotWantToSearchReason: {wantReasons.NotWantToSearchReason}] " +
-                            $"[CantStartReason: {wantReasons.CantStartReason}]",
-                            Color.white, Color.yellow, true);
+                            stringBuilder.AppendLabeledValue("Not Search Reason",
+                                $"{reasons.NotSearchReason}",
+                                Color.white, Color.yellow, true);
 
-                        stringBuilder.AppendLabeledValue("Not Search Reason",
-                            $"{reasons.NotSearchReason}",
-                            Color.white, Color.yellow, true);
-
-                        stringBuilder.AppendLabeledValue("CalcPath Fail Reason",
-                            $"{reasons.PathCalcFailReason}",
-                            Color.white, Color.yellow, true);
+                            stringBuilder.AppendLabeledValue("CalcPath Fail Reason",
+                                $"{reasons.PathCalcFailReason}",
+                                Color.white, Color.yellow, true);
+                        }
                     }
                 }
             }

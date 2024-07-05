@@ -38,7 +38,7 @@ namespace SAIN.SAINComponent.Classes.Info
             }
             _nextUpdateTime = Time.time + 10f;
             checkAllMods();
-            Log();
+            //Log();
             return true;
         }
 

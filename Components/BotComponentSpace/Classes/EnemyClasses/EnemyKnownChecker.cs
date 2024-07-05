@@ -12,7 +12,7 @@ namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
 
         public void Init()
         {
-            Bot.BotActivation.OnBotStateChanged += botStateChanged;
+            Bot.BotActivation.BotActiveToggle.OnToggle += botStateChanged;
         }
 
         public void Update()
@@ -22,7 +22,7 @@ namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
 
         public void Dispose()
         {
-            Bot.BotActivation.OnBotStateChanged -= botStateChanged;
+            Bot.BotActivation.BotActiveToggle.OnToggle -= botStateChanged;
         }
 
         private void checkShallKnowEnemy()
@@ -51,6 +51,10 @@ namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
                 return false;
             }
             if (!EnemyPlayerComponent.IsActive)
+            {
+                return false;
+            }
+            if (Enemy.LastKnownPosition == null)
             {
                 return false;
             }

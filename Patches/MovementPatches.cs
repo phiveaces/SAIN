@@ -1,7 +1,9 @@
 ﻿using SPT.Reflection.Patching;
 using Comfort.Common;
 using EFT;
+using EFT.Interactive;
 using HarmonyLib;
+using SAIN.Preset.GlobalSettings;
 using System.Reflection;
 using UnityEngine;
 using StaminaClass = BackendConfigSettingsClass.GClass1376;
@@ -146,19 +148,35 @@ namespace SAIN.Patches.Movement
         [PatchPrefix]
         public static bool PatchPrefix(ref BotOwner ____owner, ref bool __result)
         {
-            if (!SAINPlugin.LoadedPreset.GlobalSettings.General.NewDoorOpening)
+            var settings = GlobalSettingsClass.Instance.General;
+            if (settings.DisableAllDoors)
             {
-                return true;
+                __result = false;
+                return false;
             }
-            if (SAINPlugin.IsBotExluded(____owner))
+            if (settings.NewDoorOpening && 
+                SAINEnableClass.GetSAIN(____owner, out var botComponent) && 
+                botComponent.SAINLayersActive)
             {
-                return true;
+                __result = botComponent.DoorOpener.FindDoorsToOpen();
+                return false;
             }
+            return true;
+        }
+    }
 
-            if (SAINEnableClass.GetSAIN(____owner, out var botComponent) &&
-                botComponent.EnemyController.AtPeace == false)
+    public class DoorDisabledPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(WorldInteractiveObject), "method_3");
+        }
+
+        [PatchPrefix]
+        public static bool PatchPrefix(WorldInteractiveObject __instance)
+        {
+            if (!__instance.enabled || !__instance.gameObject.activeInHierarchy)
             {
-                __result = botComponent.DoorOpener.Update();
                 return false;
             }
             return true;

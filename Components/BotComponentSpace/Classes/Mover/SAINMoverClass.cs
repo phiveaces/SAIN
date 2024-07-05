@@ -1,19 +1,27 @@
 ﻿using EFT;
-using SAIN.Preset.GlobalSettings.Categories;
+using HarmonyLib;
 using SAIN.SAINComponent.Classes.EnemyClasses;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Drawing.Printing;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UIElements;
 
 namespace SAIN.SAINComponent.Classes.Mover
 {
     public class SAINMoverClass : BotBase, IBotClass
     {
+        static SAINMoverClass()
+        {
+            _pathControllerField = AccessTools.Field(typeof(BotMover), "_pathController");
+        }
+
+        private static FieldInfo _pathControllerField;
+
         public SAINMoverClass(BotComponent sain) : base(sain)
         {
+            _pathController = _pathControllerField.GetValue(sain.BotOwner.Mover) as PathControllerClass;
             BlindFire = new BlindFireController(sain);
             SideStep = new SideStepClass(sain);
             Lean = new LeanClass(sain);
@@ -22,6 +30,10 @@ namespace SAIN.SAINComponent.Classes.Mover
             SprintController = new SAINSprint(sain);
             DogFight = new DogFight(sain);
         }
+
+        private PathControllerClass _pathController { get; }
+
+        public event Action<Vector3, Vector3> OnNewGoToPoint;
 
         public DogFight DogFight { get; private set; }
         public SAINSprint SprintController { get; private set; }
@@ -92,13 +104,19 @@ namespace SAIN.SAINComponent.Classes.Mover
             {
                 return;
             }
+            // Is the bot currently falling?
             if (!Player.MovementContext.IsGrounded)
             {
+                _ungroundedTime = Time.time;
                 return;
             }
-            // Reset to navmesh 
-            ResetToNavMesh();
+            if (_ungroundedTime + 1f < Time.time)
+            {
+                ResetToNavMesh();
+            }
         }
+
+        private float _ungroundedTime;
 
         public void ResetToNavMesh()
         {
@@ -135,6 +153,10 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         public bool Crawling { get; private set; }
 
+        public Vector3 CurrentMoveDestination { get; private set; }
+
+        public bool Moving => BotOwner.Mover?.IsMoving == true || BotOwner.Mover?.HavePath == true;
+
         public bool GoToPoint(Vector3 point, out bool calculating, float reachDist = -1f, bool crawl = false, bool slowAtEnd = true, bool mustHaveCompletePath = true)
         {
             calculating = false;
@@ -150,12 +172,14 @@ namespace SAIN.SAINComponent.Classes.Mover
             {
                 reachDist = SAINPlugin.LoadedPreset.GlobalSettings.General.BaseReachDistance;
             }
+
+            bool wasMoving = Moving;
             CurrentPathStatus = BotOwner.Mover.GoToPoint(point, slowAtEnd, reachDist, false, false, true);
             if (CurrentPathStatus != NavMeshPathStatus.PathInvalid)
             {
                 Crawling = crawl;
                 Prone.SetProne(crawl);
-                Bot.DoorOpener.Update();
+                checkNewMove(point, wasMoving);
                 return true;
             }
             Crawling = false;
@@ -192,7 +216,8 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         public bool GoToPointByWay(Vector3[] way, float reachDist = -1f, bool crawl = false)
         {
-            if (way == null || way.Length < 2)
+            int length = way.Length;
+            if (way == null || length < 2)
             {
                 return false;
             }
@@ -203,9 +228,20 @@ namespace SAIN.SAINComponent.Classes.Mover
             if (crawl)
                 Prone.SetProne(true);
 
+            bool wasMoving = Moving;
             BotOwner.Mover.GoToByWay(way, reachDist);
-            Bot.DoorOpener.Update();
+            checkNewMove(way[length - 1], wasMoving);
             return true;
+        }
+
+        private void checkNewMove(Vector3 destination, bool wasMoving)
+        {
+            if (!wasMoving || (CurrentMoveDestination - destination).sqrMagnitude > 0.1f)
+            {
+                Vector3 currentCorner = _pathController.CurrentCorner();
+                OnNewGoToPoint?.Invoke(currentCorner, destination);
+            }
+            CurrentMoveDestination = destination;
         }
 
         public NavMeshPathStatus CurrentPathStatus { get; private set; } = NavMeshPathStatus.PathInvalid;

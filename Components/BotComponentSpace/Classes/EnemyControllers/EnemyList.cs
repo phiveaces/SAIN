@@ -15,6 +15,19 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
         public event Action<bool> OnListEmptyOrGetFirst;
         public event Action<bool> OnListEmptyOrGetFirstHuman;
 
+        public void SubOrUnSub(bool value, ref Action<bool, Enemy> action, Enemy enemy)
+        {
+            if (value)
+            {
+                action += AddOrRemoveEnemy;
+            }
+            else
+            {
+                action -= AddOrRemoveEnemy;
+                this.RemoveEnemy(enemy);
+            }
+        }
+
         public void AddOrRemoveEnemy(bool value, Enemy enemy)
         {
             if (value)

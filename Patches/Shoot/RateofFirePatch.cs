@@ -6,7 +6,7 @@ using SAIN.Components;
 using System.Reflection;
 using UnityEngine;
 using static SAIN.Helpers.Shoot;
-using BotWeaponControllerClass = GClass395;
+using WeaponAIPresetManager = GClass396;
 
 namespace SAIN.Patches.Shoot.RateOfFire
 {
@@ -51,7 +51,7 @@ namespace SAIN.Patches.Shoot.RateOfFire
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(BotWeaponControllerClass), "method_1");
+            return AccessTools.Method(typeof(WeaponAIPresetManager), "method_1");
         }
 
         [PatchPostfix]
@@ -72,7 +72,7 @@ namespace SAIN.Patches.Shoot.RateOfFire
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(BotWeaponControllerClass), "method_6");
+            return AccessTools.Method(typeof(WeaponAIPresetManager), "method_6");
         }
 
         [PatchPostfix]
@@ -93,7 +93,7 @@ namespace SAIN.Patches.Shoot.RateOfFire
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(BotWeaponControllerClass), "method_0");
+            return AccessTools.Method(typeof(WeaponAIPresetManager), "method_0");
         }
 
         [PatchPostfix]

@@ -119,17 +119,8 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
                 return goalEnemy;
             }
 
-            foreach (var enemy in BaseClass.Enemies.Values)
-            {
-                if (enemy?.IsValid == true &&
-                    enemy.EnemyPerson.Active &&
-                    enemy.Status.ShotAtMeRecently)
-                {
-                    return enemy;
-                }
-            }
-
-            return null;
+            var enemy = BaseClass.EnemyLists.KnownEnemies.First();
+            return enemy;
         }
 
         private void checkGoalEnemy(out Enemy enemy)

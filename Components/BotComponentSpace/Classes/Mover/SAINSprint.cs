@@ -33,6 +33,10 @@ namespace SAIN.SAINComponent.Classes.Mover
 
     public class SAINSprint : BotBase, IBotClass
     {
+        public event Action<Vector3, Vector3> OnNewCornerMoveTo;
+        public event Action<Vector3, Vector3> OnNewSprint;
+        public event Action OnSprintEnd;
+
         public SAINSprint(BotComponent sain) : base(sain)
         {
         }
@@ -74,6 +78,7 @@ namespace SAIN.SAINComponent.Classes.Mover
             {
                 return;
             }
+            OnSprintEnd?.Invoke();
             Canceling = false;
             Bot.StopCoroutine(_runToPointCoroutine);
             _runToPointCoroutine = null;
@@ -159,6 +164,7 @@ namespace SAIN.SAINComponent.Classes.Mover
             CurrentPath = path;
             _lastUrgency = urgency;
             _runToPointCoroutine = Bot.StartCoroutine(runToPointCoroutine(path.corners, urgency, callback));
+            OnNewSprint?.Invoke(path.corners[1], point);
         }
 
         private float _timeStartRun;
@@ -223,6 +229,8 @@ namespace SAIN.SAINComponent.Classes.Mover
             {
                 checkCornerLength();
                 _currentIndex++;
+                Vector3 currentCorner = _path[_currentIndex];
+                OnNewCornerMoveTo?.Invoke(currentCorner, LastRunDestination);
             }
         }
 
@@ -267,52 +275,50 @@ namespace SAIN.SAINComponent.Classes.Mover
                 float distToCurrent = float.MaxValue;
                 while (distToCurrent > _moveSettings.BotSprintCornerReachDist)
                 {
+                    updateVoxel();
                     distToCurrent = distanceToCurrentCornerSqr();
                     DistanceToCurrentCorner = distToCurrent;
 
                     Vector3 current = CurrentCornerDestination();
                     if (SAINPlugin.DebugMode)
                     {
-                        DebugGizmos.Sphere(current, 0.1f);
-                        DebugGizmos.Line(current, Bot.Position, 0.1f, 0.1f);
+                        //DebugGizmos.Sphere(current, 0.1f);
+                        //DebugGizmos.Line(current, Bot.Position, 0.1f, 0.1f);
                     }
-
-                    Bot.DoorOpener.Update();
-                    trackMovement();
 
                     // Start or stop sprinting with a buffer
                     handleSprinting(distToCurrent, urgency);
 
-                    if (BotOwner.DoorOpener.Interacting)
-                    {
-                        yield return null;
-                        continue;
-                    }
-
-                    float timeSinceNoMove = timeSinceNotMoving;
-                    if (timeSinceNoMove > _moveSettings.BotSprintRecalcTime && Time.time - _timeStartRun > 2f)
-                    {
-                        RecalcPath();
-                        yield break;
-                    }
-                    //else if (timeSinceNoMove > _moveSettings.BotSprintTryJumpTime)
-                    //{
-                    //    SAINBot.Mover.TryJump();
-                    //}
-                    else if (timeSinceNoMove > _moveSettings.BotSprintTryVaultTime)
-                    {
-                        Bot.Mover.TryVault();
-                    }
-
                     Vector3 destination = CurrentCornerDestination();
-                    float speed = IsSprintEnabled ? _moveSettings.BotSprintTurnSpeed : _moveSettings.BotSprintFirstTurnSpeed;
-                    float dotProduct = steer(destination, speed);
-                    Vector3 moveDir = (destination - Bot.Position);
-                    if (!Bot.IsSpeedHacker)
+                    if (!Bot.DoorOpener.Interacting && 
+                        !Bot.DoorOpener.BreachingDoor)
                     {
-                        moveDir = moveDir.normalized;
+                        trackMovement();
+                        float timeSinceNoMove = timeSinceNotMoving;
+                        if (timeSinceNoMove > _moveSettings.BotSprintRecalcTime && Time.time - _timeStartRun > 2f)
+                        {
+                            RecalcPath();
+                            yield break;
+                        }
+                        //else if (timeSinceNoMove > _moveSettings.BotSprintTryJumpTime)
+                        //{
+                        //    SAINBot.Mover.TryJump();
+                        //}
+                        else if (timeSinceNoMove > _moveSettings.BotSprintTryVaultTime)
+                        {
+                            Bot.Mover.TryVault();
+                        }
+
+                        Vector3 moveDir = (destination - Bot.Position);
+                        if (!Bot.IsCheater)
+                        {
+                            moveDir = moveDir.normalized;
+                        }
+                        move(moveDir);
                     }
-                    move(moveDir);
+
+                    float speed = IsSprintEnabled ? _moveSettings.BotSprintTurnSpeedWhileSprint : _moveSettings.BotSprintTurningSpeed;
+                    float dotProduct = steer(destination, speed);
 
                     //if (onLastCorner() && 
                     //    distToCurrent <= _moveSettings.BotSprintFinalDestReachDist)
@@ -402,22 +408,20 @@ namespace SAIN.SAINComponent.Classes.Mover
                 return;
             }
 
-            bool isSprinting = Player.IsSprintEnabled;
-
-            if (isSprinting && _moveSettings.EditSprintSpeed)
+            if (Player.IsSprintEnabled)
             {
-                if (Bot.IsSpeedHacker)
+                if (Bot.IsCheater)
                 {
                     Player.MovementContext.SprintSpeed = 50f;
                 }
-                else
+                else if (_moveSettings.EditSprintSpeed)
                 {
                     Player.MovementContext.SprintSpeed = 1.5f;
                 }
             }
 
             // Were messing with a door, dont sprint
-            if (BotOwner.DoorOpener.Interacting)
+            if (Bot.DoorOpener.ShallPauseSprintForOpening())
             {
                 CurrentRunStatus = RunStatus.InteractingWithDoor;
                 Bot.Mover.EnableSprintPlayer(false);
@@ -570,7 +574,7 @@ namespace SAIN.SAINComponent.Classes.Mover
                 BotOwner.Mover.IsMoving = true;
                 Vector3 targetLookDir = firstCorner - Bot.Position;
                 targetLookDir.y = 0f;
-                dotProduct = steer(firstCorner, _moveSettings.BotSprintFirstTurnSpeed);
+                dotProduct = steer(firstCorner, _moveSettings.BotSprintTurningSpeed);
                 if (!BotOwner.DoorOpener.Interacting)
                 {
                     move(targetLookDir);
@@ -587,7 +591,7 @@ namespace SAIN.SAINComponent.Classes.Mover
             Vector3 targetLookDir = (target - playerPosition);
             Vector3 targetLookDirNormal = targetLookDir.normalized;
 
-            if (!BotOwner.DoorOpener.Interacting)
+            if (!Bot.DoorOpener.Interacting)
             {
                 if (shallLookAtEnemy())
                 {
@@ -619,7 +623,6 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         private void move(Vector3 direction)
         {
-            updateVoxel();
             Player.CharacterController.SetSteerDirection(direction);
             BotOwner.AimingData?.Move(Player.Speed);
             Player.Move(findMoveDirection(direction));

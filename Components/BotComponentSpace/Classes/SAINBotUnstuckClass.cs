@@ -300,7 +300,7 @@ namespace SAIN.SAINComponent.Classes.Debug
 
         public void Update()
         {
-            if (!DontUnstuckMe)
+            if (!DontUnstuckMe && !Bot.BotActivation.BotInStandBy)
             {
                 startCoroutine();
             }

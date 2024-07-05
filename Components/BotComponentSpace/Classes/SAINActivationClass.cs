@@ -1,45 +1,45 @@
 ﻿using Comfort.Common;
-using DrakiaXYZ.BigBrain.Brains;
 using EFT;
-using System;
+using SAIN.Helpers.Events;
 
 namespace SAIN.SAINComponent.Classes
 {
     public class SAINActivationClass : BotBase, IBotClass
     {
-        public event Action<bool> OnBotStateChanged;
-
-        public bool BotActive { get; private set; }
-
-        public bool GameEnding { get; private set; } = false;
-
-        public bool SAINLayersActive => ActiveLayer != ESAINLayer.None;
-
         public ESAINLayer ActiveLayer { get; private set; }
 
-        public void SetActive(bool value)
+        public bool BotActive => BotActiveToggle.Value;
+        public ToggleEvent BotActiveToggle { get; } = new ToggleEvent();
+        public bool BotInStandBy => BotStandByToggle.Value;
+        public ToggleEvent BotStandByToggle { get; } = new ToggleEvent();
+        public bool GameEnding => GameEndingToggle.Value;
+        public ToggleEvent GameEndingToggle { get; } = new ToggleEvent();
+        public bool SAINLayersActive => SAINLayersActiveToggle.Value;
+        public ToggleEvent SAINLayersActiveToggle { get; } = new ToggleEvent();
+
+        public void SetActive(bool botActive)
         {
-            if (BotActive == value) return;
-
-            switch (value)
+            BotActiveToggle.CheckToggle(botActive);
+            setCoroutines(botActive);
+            if (!botActive)
             {
-                case true:
-                    //Logger.LogDebug($"Trying to set Bot Active... [{Bot.Info.Profile.Name}]");
-                    if (Bot.CoroutineManager.StartCoroutines())
-                    {
-                        BotActive = true;
-                        //Logger.LogDebug($"Bot Active [{Bot.Info.Profile.Name}]");
-                    }
-                    break;
-
-                case false:
-                    BotActive = false;
-                    ActiveLayer = ESAINLayer.None;
-                    Bot.CoroutineManager.StopCoroutines();
-                    break;
+                BotStandByToggle.CheckToggle(true);
+                ActiveLayer = ESAINLayer.None;
+                SAINLayersActiveToggle.CheckToggle(false);
             }
+        }
 
-            OnBotStateChanged?.Invoke(value);
+        private void setCoroutines(bool value)
+        {
+            bool started = Bot.CoroutineManager.CoroutinesStarted;
+            if (value && !started)
+            {
+                Bot.CoroutineManager.StartCoroutines();
+            }
+            else if (!value && started)
+            {
+                Bot.CoroutineManager.StopCoroutines();
+            }
         }
 
         public void SetActiveLayer(ESAINLayer layer)
@@ -50,38 +50,63 @@ namespace SAIN.SAINComponent.Classes
         public void Update()
         {
             checkActive();
-
-            if (!BotActive && 
-                Bot.Person.ActiveClass.BotActive)
-            {
-                //Logger.LogWarning($"Bot Component not active but should be!");
-                SetActive(true);
-            }
-
-            if (BotActive && 
-                BotOwner.StandBy.StandByType != BotStandByType.active && 
-                Bot.CurrentTarget.HasTarget)
-            {
-                //Logger.LogWarning($"Had to activate bot manually because they were in stand by.");
-                BotOwner.StandBy.Activate();
-            }
+            //checkSpeedReset();
         }
 
         public void LateUpdate()
         {
-            checkSpeedReset(); 
             checkActive();
         }
 
         private void checkActive()
         {
-            checkBotGame();
+            checkGameEnding(); 
+            checkBotActive();
+            checkStandBy();
+            checkLayersActive();
+        }
 
+        private void checkLayersActive()
+        {
+            SAINLayersActiveToggle.CheckToggle(ActiveLayer != ESAINLayer.None);
+        }
+
+        private void checkBotActive()
+        {
             if (GameEnding && BotActive)
-            {
                 SetActive(false);
+
+            if (!GameEnding &&
+                !BotActive &&
+                Bot.Person.ActiveClass.BotActive)
+            {
+                Logger.LogWarning($"Bot not active but should be!");
+                SetActive(true);
             }
         }
+
+        private void checkStandBy()
+        {
+            bool standby = _botInStandby;
+            if (BotActive &&
+                standby &&
+                Bot.HasEnemy)
+            {
+                //Logger.LogWarning($"Had to activate bot manually because they were in stand by.");
+                BotOwner.StandBy.Activate();
+                standby = false;
+            }
+
+            BotStandByToggle.CheckToggle(standby);
+        }
+
+        private void checkGameEnding()
+        {
+            var botGame = Singleton<IBotGame>.Instance;
+            bool gameEnding = botGame == null || botGame.Status == GameStatus.Stopping;
+            GameEndingToggle.CheckToggle(gameEnding);
+        }
+
 
         private void checkSpeedReset()
         {
@@ -113,16 +138,11 @@ namespace SAIN.SAINComponent.Classes
             Bot.Person.ActiveClass.OnBotActiveChanged += SetActive;
         }
 
-        private void checkBotGame()
-        {
-            var botGame = Singleton<IBotGame>.Instance;
-            GameEnding = botGame == null || botGame.Status == GameStatus.Stopping;
-        }
-
         public void Dispose()
         {
         }
 
+        private bool _botInStandby => BotOwner.StandBy.StandByType != BotStandByType.active;
         private bool _speedReset;
     }
 }

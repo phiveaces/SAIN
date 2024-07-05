@@ -548,6 +548,71 @@ namespace SAIN.Helpers
             CreateVectorArray8Dir(Vector3.back, array);
         }
 
+        // I have no idea what the fuck this does, but im copying it here to avoid using gclass references. names are guesses based on the functions that call it, also WHAT THE FUCK 
+
+        public static Vector3? GetCrossPoint(VectorPair p1, VectorPair p2)
+        {
+            return GetCrossPoint(p1.a, p1.b, p2.a, p2.b);
+        }
+
+        public static Vector3? GetCrossPoint(Vector3 a1, Vector3 b1, Vector3 a2, Vector3 b2)
+        {
+            CrossPoint? _cross = cross(new CrossPoint(a1), new CrossPoint(b1), new CrossPoint(a2), new CrossPoint(b2));
+            if (_cross != null)
+            {
+                return new Vector3?(new Vector3(_cross.Value.x, a1.y, _cross.Value.y));
+            }
+            return null;
+        }
+
+        public static CrossPoint? cross(CrossPoint p1, CrossPoint p2, CrossPoint p3, CrossPoint p4)
+        {
+            float num = (p1.x - p2.x) * (p4.y - p3.y) - (p1.y - p2.y) * (p4.x - p3.x);
+            if (num == 0f)
+            {
+                return null;
+            }
+            float num2 = (p1.x - p3.x) * (p4.y - p3.y) - (p1.y - p3.y) * (p4.x - p3.x);
+            float num3 = (p1.x - p2.x) * (p1.y - p3.y) - (p1.y - p2.y) * (p1.x - p3.x);
+            float num4 = num2 / num;
+            float num5 = num3 / num;
+            if (num4 >= 0f && num4 <= 1f && num5 >= 0f && num5 <= 1f)
+            {
+                float dx = p1.x + num4 * (p2.x - p1.x);
+                float dy = p1.y + num4 * (p2.y - p1.y);
+                return new CrossPoint(dx, dy);
+            }
+            return null;
+        }
+
+        public struct CrossPoint
+        {
+            public CrossPoint(float dx, float dy)
+            {
+                this.x = dx;
+                this.y = dy;
+            }
+            public CrossPoint(Vector3 v)
+            {
+                this.x = v.x;
+                this.y = v.z;
+            }
+            public float x;
+            public float y;
+        }
+
+        public struct VectorPair
+        {
+            public VectorPair(Vector3 a, Vector3 b)
+            {
+                this.a = a;
+                this.b = b;
+            }
+
+            public Vector3 a;
+            public Vector3 b;
+        }
+
         private static readonly Dictionary<Vector3, Vector3[]> dictionary_0 = new Dictionary<Vector3, Vector3[]>();
     }
 

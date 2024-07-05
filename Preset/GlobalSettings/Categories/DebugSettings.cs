@@ -26,6 +26,8 @@ namespace SAIN.Preset.GlobalSettings
         [Name("Draw Transform Gizmos")]
         public bool DrawTransformGizmos;
 
+        public bool DrawDoorLinks;
+
         public bool Overlay_Info = true;
         public bool Overlay_Info_Expanded = false;
         public bool Overlay_Search = false;

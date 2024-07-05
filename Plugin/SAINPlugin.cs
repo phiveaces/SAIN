@@ -8,6 +8,7 @@ using SAIN.Components;
 using SAIN.Editor;
 using SAIN.Helpers;
 using SAIN.Patches.Generic;
+using SAIN.Patches.Movement;
 using SAIN.Patches.Vision;
 using SAIN.Plugin;
 using SAIN.Preset;
@@ -96,6 +97,7 @@ namespace SAIN
 
                 typeof(Patches.Movement.EncumberedPatch),
                 typeof(Patches.Movement.DoorOpenerPatch),
+                typeof(Patches.Movement.DoorDisabledPatch),
                 typeof(Patches.Movement.CrawlPatch),
                 typeof(Patches.Movement.CrawlPatch2),
 
@@ -145,13 +147,9 @@ namespace SAIN
                 typeof(Patches.Shoot.Aim.AimOffsetPatch),
                 typeof(Patches.Shoot.Aim.AimTimePatch),
                 typeof(Patches.Shoot.Aim.ScatterPatch),
-                typeof(Patches.Shoot.Aim.WeaponPresetPatch),
+                //typeof(Patches.Shoot.Aim.WeaponPresetPatch),
                 typeof(Patches.Shoot.Aim.ForceNoHeadAimPatch),
                 typeof(Patches.Shoot.Aim.AimRotateSpeedPatch),
-
-                typeof(Patches.Shoot.Recoil.RecoilPatch),
-                typeof(Patches.Shoot.Recoil.LoseRecoilPatch),
-                typeof(Patches.Shoot.Recoil.EndRecoilPatch),
 
                 typeof(Patches.Shoot.RateOfFire.FullAutoPatch),
                 typeof(Patches.Shoot.RateOfFire.SemiAutoPatch),

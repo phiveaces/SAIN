@@ -254,13 +254,9 @@ namespace SAIN.SAINComponent.Classes.Decision
             {
                 return true;
             }
-            foreach (Enemy enemy in Bot.EnemyController.EnemyLists.GetEnemyList(EEnemyListType.Known))
-            {
+            foreach (Enemy enemy in Bot.EnemyController.EnemyLists.KnownEnemies)
                 if (!shallUseStimsCheckEnemy(enemy))
-                {
                     return false;
-                }
-            }
             return true;
         }
 
@@ -278,13 +274,10 @@ namespace SAIN.SAINComponent.Classes.Decision
             {
                 return true;
             }
-            foreach (Enemy enemy in Bot.EnemyController.EnemyLists.GetEnemyList(EEnemyListType.Known))
-            {
+            foreach (Enemy enemy in Bot.EnemyController.EnemyLists.KnownEnemies)
                 if (!shallFirstAidCheckEnemy(enemy))
-                {
                     return false;
-                }
-            }
+
             return true;
         }
 

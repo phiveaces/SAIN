@@ -32,6 +32,12 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
             {
                 return 1f;
             }
+
+            if (Bot.IsCheater)
+            {
+                return 0f;
+            }
+
             float minTime = 0.1f; // minimum time per shot
             float maxTime = 4f; // maximum time per shot
             float EnemyDistance = (BotOwner.AimingData.RealTargetPoint - BotOwner.WeaponRoot.position).magnitude;

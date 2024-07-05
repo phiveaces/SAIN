@@ -64,46 +64,63 @@ namespace SAIN.Components.BotController
 
         public void AddBot(BotOwner botOwner)
         {
-            Logger.LogDebug($"Checking {botOwner.name} for adding sain");
+            //Logger.LogDebug($"Checking {botOwner.name} for adding sain");
             BotController.StartCoroutine(addBot(botOwner));
-            return;
-
-            PlayerComponent playerComponent = getPlayerComp(botOwner);
-            checkExisting(botOwner);
-
-            if (SAINPlugin.IsBotExluded(botOwner))
-            {
-                botOwner.gameObject.AddComponent<SAINNoBushESP>().Init(botOwner);
-                return;
-            }
-
-            initBotComp(botOwner, playerComponent);
         }
 
         private IEnumerator addBot(BotOwner botOwner)
         {
+            PlayerComponent playerComponent = null;
+            BotComponent botComponent = null;
             try
             {
-                Logger.LogDebug($"Checking {botOwner.name}...");
-                PlayerComponent playerComponent = getPlayerComp(botOwner);
+                //Logger.LogDebug($"Checking {botOwner.name}...");
+                playerComponent = getPlayerComp(botOwner);
                 checkExisting(botOwner);
-                Logger.LogDebug($"Checking if {botOwner.name} excluded...");
+
+                //Logger.LogDebug($"Checking if {botOwner.name} excluded...");
                 if (SAINPlugin.IsBotExluded(botOwner))
                 {
-                    Logger.LogDebug($"{botOwner.name} is excluded");
+                    //Logger.LogDebug($"{botOwner.name} is excluded");
                     botOwner.gameObject.AddComponent<SAINNoBushESP>().Init(botOwner);
                     yield break;
                 }
 
-                Logger.LogDebug($"Adding SAIN to {botOwner.name}...");
-                initBotComp(botOwner, playerComponent);
-                Logger.LogDebug($"Finished {botOwner.name}");
+                //Logger.LogDebug($"Adding SAIN to {botOwner.name}...");
+                botComponent = botOwner.gameObject.AddComponent<BotComponent>();
             }
             catch (Exception e)
             {
                 Logger.LogError(e);
+                yield break;
             }
-            yield return null;
+
+            if (botComponent == null)
+            {
+                Logger.LogError($"Bot Component Null!");
+                yield break;
+            }
+            if (playerComponent == null)
+            {
+                botComponent.Dispose();
+                Logger.LogError($"Player Component Null!");
+                yield break;
+            }
+
+            if (botComponent.InitializeBot(playerComponent.Person))
+            {
+                BotDictionary.Add(botOwner.name, botComponent);
+                playerComponent.InitBotComponent(botComponent);
+                botOwner.LeaveData.OnLeave += removeBot;
+                playerComponent.Person.ActiveClass.OnPersonDeadOrDespawned += removePerson;
+            }
+            else
+            {
+                Logger.LogDebug($"Failed to Init Bot [{botOwner.name}]");
+                botComponent.Dispose();
+            }
+
+            yield break;
         }
 
         public void Subscribe(BotSpawner botSpawner)

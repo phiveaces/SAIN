@@ -28,9 +28,9 @@ namespace SAIN.Layers.Combat.Squad
                     Bot.Mover.GoToPoint(SquadLeadPos.Value, out _);
                     CheckShouldSprint(SquadLeadPos.Value);
                 }
+
                 Bot.Mover.SetTargetPose(1f);
                 Bot.Mover.SetTargetMoveSpeed(1f);
-                Bot.DoorOpener.Update();
 
                 if (!Bot.Mover.SprintController.Running)
                 {

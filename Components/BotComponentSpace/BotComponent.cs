@@ -1,9 +1,9 @@
 ﻿using EFT;
-using EFT.InventoryLogic;
 using SAIN.Components;
 using SAIN.Components.PlayerComponentSpace;
 using SAIN.Components.PlayerComponentSpace.PersonClasses;
 using SAIN.Helpers;
+using SAIN.Preset.GlobalSettings;
 using SAIN.Preset.GlobalSettings.Categories;
 using SAIN.SAINComponent.Classes;
 using SAIN.SAINComponent.Classes.Debug;
@@ -16,26 +16,18 @@ using SAIN.SAINComponent.Classes.Search;
 using SAIN.SAINComponent.Classes.Talk;
 using SAIN.SAINComponent.Classes.WeaponFunction;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace SAIN.SAINComponent
 {
-    public class BotComponent : MonoBehaviour
+    public class BotComponent : BotComponentBase
     {
-        public bool BotActive => BotActivation.BotActive;
-        public string ProfileId { get; private set; }
-        public PersonClass Person { get; private set; }
-
+        public bool Initialized { get; private set; }
         public float LastAimTime { get; set; }
+        public bool IsCheater { get; private set; }
 
-        public Vector3 Position => PlayerComponent.Position;
-        public Vector3 LookDirection => PlayerComponent.LookDirection;
-        public BotOwner BotOwner => PlayerComponent.BotOwner;
-        public PlayerComponent PlayerComponent => Person.PlayerComponent;
-        public Player Player => PlayerComponent.Player;
-        public PersonTransformClass Transform => PlayerComponent.Transform;
-
+        public bool BotActive => BotActivation.BotActive;
+        public bool BotInStandBy => BotActivation.BotInStandBy;
         public AILimitSetting CurrentAILimit => AILimit.CurrentAILimit;
 
         public bool HasEnemy => EnemyController.ActiveEnemy?.EnemyPerson.Active == true;
@@ -47,9 +39,10 @@ namespace SAIN.SAINComponent
         public Vector3? CurrentTargetDirection => CurrentTarget.CurrentTargetDirection;
         public float CurrentTargetDistance => CurrentTarget.CurrentTargetDistance;
 
+        public BotWeightManagement WeightManagement { get; private set; }
         public SAINBotMedicalClass Medical { get; private set; }
         public SAINActivationClass BotActivation { get; private set; }
-        public SAINDoorOpener DoorOpener { get; private set; }
+        public DoorOpener DoorOpener { get; private set; }
         public ManualShootClass ManualShoot { get; private set; }
         public CurrentTargetClass CurrentTarget { get; private set; }
         public BotBackpackDropClass BackpackDropper { get; private set; }
@@ -78,13 +71,11 @@ namespace SAIN.SAINComponent
         public SAINBotGrenadeClass Grenade { get; private set; }
         public SAINSteeringClass Steering { get; private set; }
         public AimClass Aim { get; private set; }
-
-        public Action OnSAINDisposed { get; set; }
-
         public CoroutineManager<BotComponent> CoroutineManager { get; private set; }
 
         public bool IsDead => !Person.ActiveClass.IsAlive;
         public bool GameEnding => BotActivation.GameEnding;
+        public bool SAINLayersActive => BotActivation.SAINLayersActive;
 
         public float DistanceToAimTarget
         {
@@ -100,91 +91,135 @@ namespace SAIN.SAINComponent
 
         public float LastCheckVisibleTime;
 
-        private float getBotTotalWeight()
+        public ESAINLayer ActiveLayer
         {
-            _slots.Clear();
-            foreach (var slot in _botEquipmentSlots)
+            get
             {
-                _slots.Add(Player.Equipment.GetSlot(slot));
+                return BotActivation.ActiveLayer;
             }
-            float result = Player.Equipment.method_10(_slots);
-            _slots.Clear();
-           // Logger.LogWarning(result);
-            return result;
+            set
+            {
+                BotActivation.SetActiveLayer(value);
+            }
         }
 
-        private readonly List<Slot> _slots = new List<Slot>();
-
-        public static readonly EquipmentSlot[] _botEquipmentSlots = new EquipmentSlot[]
+        public bool InitializeBot(PersonClass person)
         {
-            EquipmentSlot.Backpack,
-            EquipmentSlot.TacticalVest,
-            EquipmentSlot.ArmorVest,
-            EquipmentSlot.Eyewear,
-            EquipmentSlot.FaceCover,
-            EquipmentSlot.Headwear,
-            EquipmentSlot.Earpiece,
-            EquipmentSlot.FirstPrimaryWeapon,
-            EquipmentSlot.SecondPrimaryWeapon,
-            EquipmentSlot.Holster,
-            EquipmentSlot.Pockets,
-        };
-
-        public bool Init(PersonClass person)
-        {
-            Person = person;
-            ProfileId = person.ProfileId;
-
-            try
+            if (base.Init(person) == false)
             {
-                person.Player.ActiveHealthController.SetDamageCoeff(1f);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError($"Error Updating Player Values for bot: {ex}");
-            }
-
-            try
-            {
-                person.Player.InventoryControllerClass.Inventory.TotalWeight = new GClass755<float>(new Func<float>(this.getBotTotalWeight));
-                person.Player.Physical.EncumberDisabled = false;
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError($"Error Updating Weight: {ex}");
-            }
-
-            try
-            {
-                NoBushESP = this.gameObject.AddComponent<SAINNoBushESP>();
-                NoBushESP.Init(person.BotOwner, this);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError($"Error When Creating SubComponents, Disposing... : {ex}");
                 return false;
             }
 
+            if (createClasses(person) == false)
+            {
+                return false;
+            }
+
+            if (initClasses() == false)
+            {
+                return false;
+            }
+
+            if (finishInit() == false)
+            {
+                return false;
+            }
+
+            Initialized = true;
+            return true;
+        }
+
+        private bool createClasses(PersonClass person)
+        {
             try
             {
-                createClasses(person);
+                CoroutineManager = new CoroutineManager<BotComponent>(this);
+
+                // Must be first, other classes use it
+                Squad = new SAINSquadClass(this);
+
+                WeightManagement = new BotWeightManagement(this);
+                NoBushESP = this.gameObject.AddComponent<SAINNoBushESP>();
+                Info = new SAINBotInfoClass(this);
+                Memory = new SAINMemoryClass(this);
+                BotStuck = new SAINBotUnstuckClass(this);
+                Hearing = new SAINHearingSensorClass(this);
+                Talk = new SAINBotTalkClass(this);
+                Decision = new SAINDecisionClass(this);
+                Cover = new SAINCoverClass(this);
+                SelfActions = new SAINSelfActionClass(this);
+                Steering = new SAINSteeringClass(this);
+                Grenade = new SAINBotGrenadeClass(this);
+                Mover = new SAINMoverClass(this);
+                EnemyController = new SAINEnemyController(this);
+                FriendlyFire = new SAINFriendlyFireClass(this);
+                Vision = new SAINVisionClass(this);
+                Search = new SAINSearchClass(this);
+                Vault = new SAINVaultClass(this);
+                Suppression = new SAINBotSuppressClass(this);
+                AILimit = new SAINAILimit(this);
+                AimDownSightsController = new AimDownSightsController(this);
+                SpaceAwareness = new SAINBotSpaceAwareness(this);
+                DoorOpener = new DoorOpener(this);
+                Medical = new SAINBotMedicalClass(this);
+                BotLight = new BotLightController(this);
+                BackpackDropper = new BotBackpackDropClass(this);
+                CurrentTarget = new CurrentTargetClass(this);
+                ManualShoot = new ManualShootClass(this);
+                BotActivation = new SAINActivationClass(this);
+                Aim = new AimClass(this);
             }
             catch (Exception ex)
             {
                 Logger.LogError($"Error When Creating Classes, Disposing... : {ex}");
                 return false;
             }
+            return true;
+        }
 
+        private bool initClasses()
+        {
             try
             {
-                initializeClasses();
+                Info.Init();
+                BotActivation.Init();
+                NoBushESP.Init(Person.BotOwner, this);
+                WeightManagement.Init();
+                Search.Init();
+                Memory.Init();
+                EnemyController.Init();
+                FriendlyFire.Init();
+                Vision.Init();
+                Mover.Init();
+                BotStuck.Init();
+                Hearing.Init();
+                Talk.Init();
+                Decision.Init();
+                Cover.Init();
+                Squad.Init();
+                SelfActions.Init();
+                Grenade.Init();
+                Steering.Init();
+                Vault.Init();
+                Suppression.Init();
+                AILimit.Init();
+                AimDownSightsController.Init();
+                SpaceAwareness.Init();
+                Medical.Init();
+                BotLight.Init();
+                BackpackDropper.Init();
+                Aim.Init();
             }
             catch (Exception ex)
             {
                 Logger.LogError($"Error When Initializing Classes, Disposing... : {ex}");
                 return false;
             }
+            return true;
+        }
 
+        private bool finishInit()
+        {
             try
             {
                 if (!verifyBrain(Person))
@@ -193,10 +228,11 @@ namespace SAIN.SAINComponent
                     return false;
                 }
 
-                if (EFTMath.RandomBool(1) &&
-                    SAINPlugin.LoadedPreset.GlobalSettings.General.RandomSpeedHacker)
+                var settings = GlobalSettingsClass.Instance.General;
+                if (settings.RandomCheaters &&
+                    EFTMath.RandomBool(settings.RandomCheaterChance))
                 {
-                    IsSpeedHacker = true;
+                    IsCheater = true;
                 }
             }
             catch (Exception ex)
@@ -204,76 +240,7 @@ namespace SAIN.SAINComponent
                 Logger.LogError($"Error When Finishing Bot Initialization, Disposing... : {ex}");
                 return false;
             }
-
             return true;
-        }
-
-        private void createClasses(PersonClass person)
-        {
-            CoroutineManager = new CoroutineManager<BotComponent>(this);
-
-            // Must be first, other classes use it
-            Squad = new SAINSquadClass(this);
-
-            Info = new SAINBotInfoClass(this);
-            Memory = new SAINMemoryClass(this);
-            BotStuck = new SAINBotUnstuckClass(this);
-            Hearing = new SAINHearingSensorClass(this);
-            Talk = new SAINBotTalkClass(this);
-            Decision = new SAINDecisionClass(this);
-            Cover = new SAINCoverClass(this);
-            SelfActions = new SAINSelfActionClass(this);
-            Steering = new SAINSteeringClass(this);
-            Grenade = new SAINBotGrenadeClass(this);
-            Mover = new SAINMoverClass(this);
-            EnemyController = new SAINEnemyController(this);
-            FriendlyFire = new SAINFriendlyFireClass(this);
-            Vision = new SAINVisionClass(this);
-            Search = new SAINSearchClass(this);
-            Vault = new SAINVaultClass(this);
-            Suppression = new SAINBotSuppressClass(this);
-            AILimit = new SAINAILimit(this);
-            AimDownSightsController = new AimDownSightsController(this);
-            SpaceAwareness = new SAINBotSpaceAwareness(this);
-            DoorOpener = new SAINDoorOpener(this, person.BotOwner);
-            Medical = new SAINBotMedicalClass(this);
-            BotLight = new BotLightController(this);
-            BackpackDropper = new BotBackpackDropClass(this);
-            CurrentTarget = new CurrentTargetClass(this);
-            ManualShoot = new ManualShootClass(this);
-            BotActivation = new SAINActivationClass(this);
-            Aim = new AimClass(this);
-        }
-
-        private void initializeClasses()
-        {
-            Info.Init();
-            BotActivation.Init();
-
-            Search.Init();
-            Memory.Init();
-            EnemyController.Init();
-            FriendlyFire.Init();
-            Vision.Init();
-            Mover.Init();
-            BotStuck.Init();
-            Hearing.Init();
-            Talk.Init();
-            Decision.Init();
-            Cover.Init();
-            Squad.Init();
-            SelfActions.Init();
-            Grenade.Init();
-            Steering.Init();
-            Vault.Init();
-            Suppression.Init();
-            AILimit.Init();
-            AimDownSightsController.Init();
-            SpaceAwareness.Init();
-            Medical.Init();
-            BotLight.Init();
-            BackpackDropper.Init();
-            Aim.Init();
         }
 
         private bool verifyBrain(PersonClass person)
@@ -293,58 +260,39 @@ namespace SAIN.SAINComponent
             StopAllCoroutines();
         }
 
-        public bool IsSpeedHacker { get; private set; }
-        public bool SAINLayersActive => BotActivation.SAINLayersActive;
-
-        public ESAINLayer ActiveLayer
-        {
-            get
-            {
-                return BotActivation.ActiveLayer;
-            }
-            set
-            {
-                BotActivation.SetActiveLayer(value);
-            }
-        }
-
-        private void resetBot(EBotState state)
-        {
-            Decision.ResetDecisions(false);
-        }
-
         private void Update()
         {
-            BotActivation.Update();
-
-            if (!BotActive)
+            if (!Initialized)
             {
                 return;
             }
-            if (BotOwner == null)
+
+            BotActivation.Update();
+            if (!BotActive)
             {
-                Logger.LogError("Botowner null");
                 return;
             }
 
             EnemyController.Update();
             AILimit.Update();
             CurrentTarget.Update();
+            BotStuck.Update();
             Decision.Update();
-            Info.Update();
 
-            if (BotOwner.Mover.IsMoving || Mover.SprintController.Running)
+            if (BotInStandBy)
             {
-                DoorOpener.Update();
+                return;
             }
 
+            Info.Update();
+            WeightManagement.Update();
+            DoorOpener.Update();
             Aim.Update();
             Search.Update();
             Memory.Update();
             FriendlyFire.Update();
             Vision.Update();
             Mover.Update();
-            BotStuck.Update();
             Hearing.Update();
             Talk.Update();
             Cover.Update();
@@ -365,12 +313,16 @@ namespace SAIN.SAINComponent
 
         private void LateUpdate()
         {
+            if (!Initialized)
+            {
+                return;
+            }
             BotActivation.LateUpdate();
         }
 
         private void handleDumbShit()
         {
-            if (IsSpeedHacker)
+            if (IsCheater)
             {
                 if (defaultMoveSpeed == 0)
                 {
@@ -395,17 +347,14 @@ namespace SAIN.SAINComponent
             }
         }
 
-        private float defaultMoveSpeed;
-        private float defaultSprintSpeed;
-
-        public void Dispose()
+        public override void Dispose()
         {
-            BotActivation?.SetActive(false);
-            OnSAINDisposed?.Invoke();
-            CoroutineManager?.Dispose();
+            base.Dispose();
+            OnDisable();
 
             try
             {
+                CoroutineManager?.Dispose();
                 Search?.Dispose();
                 Memory?.Dispose();
                 EnemyController?.Dispose();
@@ -452,5 +401,13 @@ namespace SAIN.SAINComponent
             }
             Destroy(this);
         }
+
+        private void resetBot(EBotState state)
+        {
+            Decision.ResetDecisions(false);
+        }
+
+        private float defaultMoveSpeed;
+        private float defaultSprintSpeed;
     }
 }

@@ -25,6 +25,7 @@
         {
             None,
             NullEnemy,
+            NullLastKnown,
             EnemyNotSeenOrHeard,
             WontSearchFromAudio,
             CantStart,

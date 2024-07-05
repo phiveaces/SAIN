@@ -42,10 +42,10 @@ namespace SAIN.Preset.BotSettings.SAINSettings.Categories
         [MinMax(0.05f, 0.75f, 100f)]
         public float FasterCQBReactionsMinimum = 0.33f;
 
-        [Name("Accuracy Spread Multiplier")]
-        [Description("Higher = less accurate. Modifies a bot's base accuracy and spread. 1.5 = 1.5x higher accuracy spread")]
-        [MinMax(0.1f, 10f, 10f)]
-        public float AccuracySpreadMulti = 1f;
+        //[Name("Accuracy Spread Multiplier")]
+        //[Description("Higher = less accurate. Modifies a bot's base accuracy and spread. 1.5 = 1.5x higher accuracy spread")]
+        //[MinMax(0.1f, 10f, 10f)]
+        //public float AccuracySpreadMulti = 1f;
 
         [Name("Max Aiming Upgrade By Time")]
         [Description("Lower = Better. How much to cap this bots aim improvement based on time. 0.25 means they will be able to multiply their aim offset by 0.25x when aiming. Making their shots more accurate")]

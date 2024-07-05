@@ -7,7 +7,8 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
 {
     public class SAINEnemyParts
     {
-        public bool LineOfSight { get; private set; }
+        public bool LineOfSight => TimeSinceInLineOfSight < 0.2f;
+        public float TimeSinceInLineOfSight => Time.time - _timeLastInSight;
         public Vector3 LastSuccessPosition { get; private set; }
         public Dictionary<EBodyPart, SAINEnemyPartData> Parts { get; } = new Dictionary<EBodyPart, SAINEnemyPartData>();
 
@@ -16,25 +17,20 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
             var visiblePart = findPartInLOS();
             if (visiblePart != null)
             {
-                LineOfSight = true;
+                _timeLastInSight = Time.time;
                 if (visiblePart.LastSuccessPoint != null)
                     LastSuccessPosition = visiblePart.LastSuccessPoint.Value;
 
                 return;
             }
-            LineOfSight = false;
         }
 
 
         private SAINEnemyPartData findPartInLOS()
         {
             foreach (var part in Parts.Values)
-            {
                 if (part.LineOfSight)
-                {
                     return part;
-                }
-            }
             return null;
         }
 
@@ -208,6 +204,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
         }
         private bool IsYourPlayer;
         private float _lastSuccessTime;
+        private float _timeLastInSight;
         private int _index;
         private readonly int _indexMax;
         private SAINEnemyPartData _lastCheckSuccessPart;

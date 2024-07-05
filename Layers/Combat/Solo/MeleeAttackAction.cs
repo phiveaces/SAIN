@@ -17,7 +17,6 @@ namespace SAIN.Layers.Combat.Solo
         {
             while (true)
             {
-                Bot.DoorOpener.Update();
                 BotOwner.WeaponManager.Melee.RunToEnemyUpdate();
                 yield return null;
             }
