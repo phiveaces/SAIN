@@ -42,7 +42,7 @@ namespace SAIN.SAINComponent.Classes
         {
             const float dispSuppGun = 12.5f;
             const float dispGun = 17.5f;
-            const float dispStep = 6.25f;
+            const float dispStep = 10f;
 
             float dispersion;
             switch (soundType)
@@ -117,7 +117,8 @@ namespace SAIN.SAINComponent.Classes
         {
             float randomHeight = dispersion / 10f;
             float randomX = UnityEngine.Random.Range(-dispersion, dispersion);
-            float randomY = UnityEngine.Random.Range(-randomHeight, randomHeight);
+            //float randomY = UnityEngine.Random.Range(-randomHeight, randomHeight);
+            float randomY = 0f;
             float randomZ = UnityEngine.Random.Range(-dispersion, dispersion);
             Vector3 randomdirection = new Vector3(randomX, 0, randomZ);
 

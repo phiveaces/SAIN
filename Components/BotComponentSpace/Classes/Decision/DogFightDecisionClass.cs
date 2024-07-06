@@ -53,12 +53,12 @@ namespace SAIN.SAINComponent.Classes.Decision
             {
                 return false;
             }
-            SoloDecision currentDecision = Bot.Decision.CurrentSoloDecision;
-            if (currentDecision == SoloDecision.RushEnemy)
+            CombatDecision currentDecision = Bot.Decision.CurrentSoloDecision;
+            if (currentDecision == CombatDecision.RushEnemy)
             {
                 return false;
             }
-            if (currentDecision == SoloDecision.Retreat || currentDecision == SoloDecision.RunToCover)
+            if (currentDecision == CombatDecision.Retreat || currentDecision == CombatDecision.RunToCover)
             {
                 if (Bot.Decision.SelfActionDecisions.LowOnAmmo(0.2f))
                 {

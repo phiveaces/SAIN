@@ -89,7 +89,7 @@ namespace SAIN.Helpers
 
         public static readonly EPersonality[] Personalities = GetEnum<EPersonality>();
 
-        public static readonly SoloDecision[] SoloDecisions = GetEnum<SoloDecision>();
+        public static readonly CombatDecision[] SoloDecisions = GetEnum<CombatDecision>();
         public static readonly SquadDecision[] SquadDecisions = GetEnum<SquadDecision>();
         public static readonly SelfDecision[] SelfDecisions = GetEnum<SelfDecision>();
 

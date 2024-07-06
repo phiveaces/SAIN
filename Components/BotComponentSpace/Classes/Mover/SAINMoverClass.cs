@@ -160,14 +160,14 @@ namespace SAIN.SAINComponent.Classes.Mover
         public bool GoToPoint(Vector3 point, out bool calculating, float reachDist = -1f, bool crawl = false, bool slowAtEnd = true, bool mustHaveCompletePath = true)
         {
             calculating = false;
-            if (SprintController.Running)
-            {
-                SprintController.CancelRun(0.25f);
-                if (SprintController.Canceling)
-                {
-                    return false;
-                }
-            }
+            //if (SprintController.Running)
+            //{
+            //    SprintController.CancelRun(0.25f);
+            //    if (SprintController.Canceling)
+            //    {
+            //        return false;
+            //    }
+            //}
             if (reachDist < 0f)
             {
                 reachDist = SAINPlugin.LoadedPreset.GlobalSettings.General.BaseReachDistance;
@@ -177,6 +177,7 @@ namespace SAIN.SAINComponent.Classes.Mover
             CurrentPathStatus = BotOwner.Mover.GoToPoint(point, slowAtEnd, reachDist, false, false, true);
             if (CurrentPathStatus != NavMeshPathStatus.PathInvalid)
             {
+                SprintController.CancelRun();
                 Crawling = crawl;
                 Prone.SetProne(crawl);
                 checkNewMove(point, wasMoving);
@@ -230,6 +231,7 @@ namespace SAIN.SAINComponent.Classes.Mover
 
             bool wasMoving = Moving;
             BotOwner.Mover.GoToByWay(way, reachDist);
+            SprintController.CancelRun();
             checkNewMove(way[length - 1], wasMoving);
             return true;
         }

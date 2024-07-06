@@ -1,4 +1,5 @@
-﻿using SAIN.Helpers;
+﻿using SAIN.BotController.Classes;
+using SAIN.Helpers;
 using SAIN.SAINComponent.Classes.EnemyClasses;
 using UnityEngine;
 using static SAIN.SAINComponent.Classes.Search.SearchReasonsStruct;
@@ -11,11 +12,9 @@ namespace SAIN.SAINComponent.Classes.Search
         {
         }
 
-        public bool ShallStartSearch(bool mustHaveTarget, out SearchReasonsStruct failReasons)
+        public bool ShallStartSearch(Enemy enemy, out SearchReasonsStruct failReasons)
         {
             calcSearchTime();
-            Enemy enemy = Bot.Enemy;
-
             failReasons = new SearchReasonsStruct();
 
             if (!WantToSearch(enemy, out failReasons.WantSearchReasons))
@@ -24,17 +23,17 @@ namespace SAIN.SAINComponent.Classes.Search
                 return false;
             }
 
-            if (Bot.Decision.CurrentSoloDecision == SoloDecision.Search)
+            if (enemy.Events.OnSearch.Value)
             {
-                if (BaseClass.FinalDestination == null)
+                if (BaseClass.PathFinder.TargetPlace == null)
                 {
-                    failReasons.NotSearchReason = ENotSearchReason.NullDestination;
+                    failReasons.NotSearchReason = ENotSearchReason.NullTargetPlace;
                     return false;
                 }
                 return true;
             }
 
-            if (!BaseClass.PathFinder.HasPathToSearchTarget(out failReasons.PathCalcFailReason, mustHaveTarget))
+            if (!BaseClass.PathFinder.HasPathToSearchTarget(enemy, out string failreason))
             {
                 failReasons.NotSearchReason = ENotSearchReason.PathCalcFailed;
                 return false;
@@ -44,7 +43,7 @@ namespace SAIN.SAINComponent.Classes.Search
 
         private void calcSearchTime()
         {
-            if (Bot.Decision.CurrentSoloDecision != SoloDecision.Search
+            if (Bot.Decision.CurrentSoloDecision != CombatDecision.Search
                 && _nextRecalcSearchTime < Time.time)
             {
                 _nextRecalcSearchTime = Time.time + 120f;
@@ -60,9 +59,15 @@ namespace SAIN.SAINComponent.Classes.Search
                 reasons.NotWantToSearchReason = ENotWantToSearchReason.NullEnemy;
                 return false;
             }
-            if (enemy.LastKnownPosition == null)
+            var lastKnown = enemy.KnownPlaces.LastKnownPlace;
+            if (lastKnown == null)
             {
                 reasons.NotWantToSearchReason = ENotWantToSearchReason.NullLastKnown;
+                return false;
+            }
+            if (lastKnown.HasArrivedPersonal || lastKnown.HasArrivedSquad)
+            {
+                reasons.NotWantToSearchReason = ENotWantToSearchReason.AlreadySearchedLastKnown;
                 return false;
             }
             if (!enemy.Seen && !Bot.Info.PersonalitySettings.Search.WillSearchFromAudio)
@@ -86,6 +91,12 @@ namespace SAIN.SAINComponent.Classes.Search
 
         private bool shallSearch(Enemy enemy, out EWantToSearchReason reason)
         {
+            if (enemy.Hearing.EnemyHeardFromPeace && 
+                Bot.Info.PersonalitySettings.Search.HeardFromPeaceBehavior == EHeardFromPeaceBehavior.SearchNow)
+            {
+                reason = EWantToSearchReason.HeardFromPeaceSearchNow;
+                return true;
+            }
             if (ShallBeStealthyDuringSearch(enemy) &&
                 Bot.Decision.EnemyDecisions.UnFreezeTime > Time.time &&
                 enemy.TimeSinceLastKnownUpdated > 10f)
@@ -114,6 +125,10 @@ namespace SAIN.SAINComponent.Classes.Search
                 return false;
             }
             if (!enemy.Hearing.EnemyHeardFromPeace)
+            {
+                return false;
+            }
+            if (Bot.Info.PersonalitySettings.Search.HeardFromPeaceBehavior == EHeardFromPeaceBehavior.SearchNow)
             {
                 return false;
             }
@@ -150,17 +165,35 @@ namespace SAIN.SAINComponent.Classes.Search
                 reason = EWantToSearchReason.NewSearch_PowerLevel;
                 return true;
             }
-            if (enemy.Seen && enemy.TimeSinceSeen >= timeBeforeSearch)
+            if (enemy.Seen && 
+                enemy.TimeSinceSeen >= timeBeforeSearch)
             {
                 reason = EWantToSearchReason.NewSearch_EnemyNotSeen;
                 return true;
             }
-            if (enemy.Heard &&
-                Bot.Info.PersonalitySettings.Search.WillSearchFromAudio &&
-                enemy.TimeSinceHeard >= timeBeforeSearch)
+            var squadSeenPlace = enemy.KnownPlaces.LastSquadSeenPlace;
+            if (squadSeenPlace != null && 
+                squadSeenPlace.TimeSincePositionUpdated >= timeBeforeSearch)
             {
-                reason = EWantToSearchReason.NewSearch_EnemyNotHeard;
+                reason = EWantToSearchReason.NewSearch_EnemyNotSeen_Squad;
                 return true;
+            }
+
+            if (Bot.Info.PersonalitySettings.Search.WillSearchFromAudio)
+            {
+                if (enemy.Heard &&
+                    enemy.TimeSinceHeard >= timeBeforeSearch)
+                {
+                    reason = EWantToSearchReason.NewSearch_EnemyNotHeard;
+                    return true;
+                }
+                var squadHeardPlace = enemy.KnownPlaces.LastSquadHeardPlace;
+                if (squadHeardPlace != null &&
+                    squadHeardPlace.TimeSincePositionUpdated >= timeBeforeSearch)
+                {
+                    reason = EWantToSearchReason.NewSearch_EnemyNotHeard_Squad;
+                    return true;
+                }
             }
             reason = EWantToSearchReason.None;
             return false;
@@ -203,20 +236,33 @@ namespace SAIN.SAINComponent.Classes.Search
                 return true;
             }
 
-            if (enemy.Seen)
+            timeBeforeSearch = Mathf.Clamp(timeBeforeSearch / 3f, 0f, 120f);
+            if (enemy.Seen && enemy.TimeSinceSeen >= timeBeforeSearch)
             {
-                timeBeforeSearch = Mathf.Clamp(timeBeforeSearch / 3f, 0f, 120f);
-                if (enemy.TimeSinceSeen >= timeBeforeSearch)
-                {
-                    reason = EWantToSearchReason.ContinueSearch_EnemyNotSeen;
-                    return true;
-                }
+                reason = EWantToSearchReason.ContinueSearch_EnemyNotSeen_Personal;
+                return true;
+            }
+            var squadSeenPlace = enemy.KnownPlaces.LastSquadSeenPlace;
+            if (squadSeenPlace != null &&
+                squadSeenPlace.TimeSincePositionUpdated >= timeBeforeSearch)
+            {
+                reason = EWantToSearchReason.ContinueSearch_EnemyNotSeen_Squad;
+                return true;
             }
 
-            if (enemy.Heard && Bot.Info.PersonalitySettings.Search.WillSearchFromAudio)
+            if (Bot.Info.PersonalitySettings.Search.WillSearchFromAudio)
             {
-                reason = EWantToSearchReason.ContinueSearch_EnemyNotHeard;
-                return true;
+                if (enemy.Heard)
+                {
+                    reason = EWantToSearchReason.ContinueSearch_EnemyNotHeard;
+                    return true;
+                }
+                var squadHeardPlace = enemy.KnownPlaces.LastSquadHeardPlace;
+                if (squadHeardPlace != null)
+                {
+                    reason = EWantToSearchReason.ContinueSearch_EnemyNotHeard_Squad;
+                    return true;
+                }
             }
 
             reason = EWantToSearchReason.None;

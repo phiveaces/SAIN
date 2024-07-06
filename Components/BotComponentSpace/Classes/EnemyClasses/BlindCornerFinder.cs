@@ -30,7 +30,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
 
             Stopwatch sw = Stopwatch.StartNew();
             int totalRaycasts = 0;
-            const int MAX_CASTS_PER_FRAME = 3;
+            const int MAX_CASTS_PER_FRAME = 4;
             const int MAX_ITERATIONS_REAL_CORNER = 15;
 
             Vector3 lookPoint = Bot.Transform.EyePosition;
@@ -70,19 +70,18 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
                 _corners.Clear();
             }
 
-            if (raycasts > 0)
-            {
-                totalRaycasts += raycasts;
-                raycasts = 0;
-                yield return null;
-            }
-
-
             lastVisibleCorner.y += heightOffset;
             notVisibleCorner.y += heightOffset;
             
             Vector3 pointPastCorner = RaycastPastCorner(lastVisibleCorner, lookPoint, 0f, 10f);
             raycasts++;
+
+            if (raycasts >= MAX_CASTS_PER_FRAME)
+            {
+                totalRaycasts += raycasts;
+                raycasts = 0;
+                yield return null;
+            }
 
             float sign = Vector.FindFlatSignedAngle(pointPastCorner, notVisibleCorner, lookPoint);
             float angle = sign <= 0 ? -15f : 15f;

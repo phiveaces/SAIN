@@ -79,7 +79,6 @@ namespace SAIN.Layers.Combat.Solo
                         BotOwner.BotRun.Run(movePos, false, SAINPlugin.LoadedPreset.GlobalSettings.General.SprintReachDistance);
                         Bot.Steering.LookToMovingDirection(500f, true);
                     }
-                    BotOwner.AimingData?.LoseTarget();
                     yield return null;
                     continue;
                 }

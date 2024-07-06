@@ -22,7 +22,7 @@ namespace SAIN.Layers
             _lastActionDecision = CurrentDecision;
             switch (_lastActionDecision)
             {
-                case SoloDecision.DogFight:
+                case CombatDecision.DogFight:
                     if (Bot.Decision.DogFightDecision.DogFightTarget != null)
                     {
                         return new Action(typeof(DogFightAction), $"Dog Fight - Enemy Close!");
@@ -40,7 +40,7 @@ namespace SAIN.Layers
                         return new Action(typeof(DogFightAction), $"Dog Fight - No Reason");
                     }
 
-                case SoloDecision.AvoidGrenade:
+                case CombatDecision.AvoidGrenade:
                     return new Action(typeof(RunToCoverAction), $"Avoid Grenade");
 
                 default:
@@ -52,8 +52,8 @@ namespace SAIN.Layers
         {
             bool active = 
                 Bot?.BotActive == true &&
-                (CurrentDecision == SoloDecision.DogFight ||
-                CurrentDecision == SoloDecision.AvoidGrenade);
+                (CurrentDecision == CombatDecision.DogFight ||
+                CurrentDecision == CombatDecision.AvoidGrenade);
 
             setLayer(active);
             return active;
@@ -64,7 +64,7 @@ namespace SAIN.Layers
             return Bot?.BotActive == true && _lastActionDecision != CurrentDecision;
         }
 
-        private SoloDecision _lastActionDecision;
-        public SoloDecision CurrentDecision => Bot.Decision.CurrentSoloDecision;
+        private CombatDecision _lastActionDecision;
+        public CombatDecision CurrentDecision => Bot.Decision.CurrentSoloDecision;
     }
 }

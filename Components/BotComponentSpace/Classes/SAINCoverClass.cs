@@ -1,9 +1,8 @@
-﻿using Comfort.Common;
-using EFT;
+﻿using EFT;
+using JetBrains.Annotations;
 using SAIN.Helpers;
-using SAIN.SAINComponent.Classes.EnemyClasses;
 using SAIN.SAINComponent.SubComponents.CoverFinder;
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,9 +16,87 @@ namespace SAIN.SAINComponent.Classes
 
     public class SAINCoverClass : BotBase, IBotClass
     {
+        public event Action<CoverPoint> OnNewCoverInUse;
+        public event Action<CoverPoint> OnEnterCover;
+        public event Action OnSpottedInCover;
+
+        public CoverPoint CoverInUse
+        {
+            get
+            {
+                return _coverInUse;
+            }
+            set
+            {
+                if (value != _coverInUse)
+                {
+                    _coverInUse = value;
+                    OnNewCoverInUse?.Invoke(value);
+                }
+            }
+        }
+
+        public CoverPoint CoverPointImAt
+        {
+            get 
+            {
+            
+                var cover = CoverInUse;
+                if (cover == null)
+                {
+                    return null;
+                }
+                if (checkMoving(cover) == true)
+                {
+                    return null;
+                }
+                return cover;
+            }
+        }
+
+        private float _spottedTime;
+        public bool SpottedInCover => _spottedTime > Time.time;
+
+        public bool HasCover => CoverInUse != null;
+        public bool InCover => HasCover && checkMoving(CoverInUse) == false;
+        public bool IsMovingToCover => HasCover && checkMoving(CoverInUse) == true;
+        public CoverFinderState CurrentCoverFinderState { get; private set; }
+        public List<CoverPoint> CoverPoints => CoverFinder.CoverPoints;
+        public CoverFinderComponent CoverFinder { get; private set; }
+        public CoverPoint FallBackPoint => CoverFinder.FallBackPoint;
+        public float LastHitInCoverTime { get; private set; }
+        public float TimeSinceLastHitInCover => Time.time - LastHitInCoverTime;
+
         public SAINCoverClass(BotComponent bot) : base(bot)
         {
             CoverFinder = bot.GetOrAddComponent<CoverFinderComponent>();
+        }
+
+        public void Init()
+        {
+            base.SubscribeToPreset(null);
+            CoverFinder.Init(Bot);
+        }
+
+        public void Update()
+        {
+            bool active = Bot.SAINLayersActive && Bot.Decision.HasDecision;
+            ActivateCoverFinder(active);
+            if (active)
+            {
+                checkEnterCover();
+                createDebug();
+            }
+        }
+
+
+        public void Dispose()
+        {
+            try
+            {
+                CoverFinder?.Dispose();
+            }
+            catch { }
         }
 
         public CoverPoint FindPointInDirection(Vector3 direction, float dotThreshold = 0.33f, float minDistance = 8f)
@@ -45,23 +122,49 @@ namespace SAIN.SAINComponent.Classes
             return null;
         }
 
-        public void Init()
+        private void checkEnterCover()
         {
-            base.SubscribeToPreset(null);
-            CoverFinder.Init(Bot);
-        }
-
-        public CoverFinderState CurrentCoverFinderState { get; private set; }
-
-        public void Update()
-        {
-            if (!Bot.SAINLayersActive)
+            var coverImAt = CoverPointImAt;
+            if (coverImAt == null)
             {
-                ActivateCoverFinder(false);
+                _coverEntered = false;
                 return;
             }
-            ActivateCoverFinder(Bot.Decision.HasDecision);
-            createDebug();
+
+            if (!_coverEntered)
+            {
+                _coverEntered= true;
+                OnEnterCover?.Invoke(coverImAt);
+            }
+        }
+
+        private bool checkMoving([NotNull]CoverPoint cover)
+        {
+            // our straight distance to the cover position is less than the set threshold, we are in cover, so not moving to cover
+            if (!isMovingTo(cover, cover.StraightDistanceStatus))
+            {
+                return false;
+            }
+            // our path length is less than the set threshold, we are in cover, so not moving to cover
+            if (!isMovingTo(cover, cover.PathDistanceStatus))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private bool isMovingTo(CoverPoint point, CoverStatus status)
+        {
+            switch (status)
+            {
+                case CoverStatus.CloseToCover:
+                case CoverStatus.MidRangeToCover:
+                case CoverStatus.FarFromCover:
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         private void createDebug()
@@ -86,45 +189,17 @@ namespace SAIN.SAINComponent.Classes
             }
         }
 
-
-        private GUIObject debugCoverObject;
-        private GameObject debugCoverLine;
-
-        public void Dispose()
-        {
-            try
-            {
-                CoverFinder?.Dispose();
-            }
-            catch { }
-        }
-
         public void GetHit(DamageInfo damageInfo, EBodyPart bodyPart, float floatVal)
         {
-            LastHitTime = Time.time;
-
-            CoverPoint coverInUse = CoverInUse;
-            if (coverInUse != null && coverInUse.Status == CoverStatus.InCover)
+            if (InCover)
             {
-                Enemy enemy = Bot.Enemy;
-                bool HitInCoverKnown = enemy != null && 
-                    damageInfo.Player?.iPlayer != null && 
-                    enemy.EnemyPlayer.ProfileId == damageInfo.Player.iPlayer.ProfileId;
-
-                bool HitInCoverCantSee = enemy != null && 
-                    enemy.IsVisible == false;
-
-                if (HitInCoverCantSee)
+                bool wasSpotted = CoverInUse.Spotted;
+                LastHitInCoverTime = Time.time;
+                CoverInUse.GetHit(damageInfo, bodyPart, Bot.Enemy);
+                if (CoverInUse.Spotted && !wasSpotted)
                 {
-                    coverInUse.HitInCoverCantSeeCount++;
-                }
-                else if (HitInCoverKnown)
-                {
-                    coverInUse.HitInCoverCount++;
-                }
-                else
-                {
-                    coverInUse.HitInCoverUnknownCount++;
+                    _spottedTime = Time.time;
+                    OnSpottedInCover?.Invoke();
                 }
             }
         }
@@ -152,31 +227,14 @@ namespace SAIN.SAINComponent.Classes
                 return;
             }
 
-            SoloDecision decision = Bot.Decision.CurrentSoloDecision;
-            if (decision != SoloDecision.MoveToCover
-                && decision != SoloDecision.RunToCover
-                && decision != SoloDecision.Retreat
-                && decision != SoloDecision.HoldInCover 
-                && decision != SoloDecision.ShiftCover)
+            CombatDecision decision = Bot.Decision.CurrentSoloDecision;
+            if (decision != CombatDecision.MoveToCover
+                && decision != CombatDecision.RunToCover
+                && decision != CombatDecision.Retreat
+                && decision != CombatDecision.HoldInCover 
+                && decision != CombatDecision.ShiftCover)
             {
                 Bot.Cover.CoverInUse = null;
-            }
-        }
-
-        public CoverPoint ClosestPoint
-        {
-            get
-            {
-                SortPointsByPathDist();
-                for (int i = 0; i < CoverPoints.Count; i++)
-                {
-                    CoverPoint point = CoverPoints[i];
-                    if (point != null && point.Spotted == false)
-                    {
-                        return point;
-                    }
-                }
-                return null;
             }
         }
 
@@ -219,9 +277,9 @@ namespace SAIN.SAINComponent.Classes
             var enemy = Bot.Enemy;
             if (enemy?.IsVisible == true)
             {
-                if (CheckLimbTimer < Time.time)
+                if (_checkLimbsTime < Time.time)
                 {
-                    CheckLimbTimer = Time.time + 0.1f;
+                    _checkLimbsTime = Time.time + 0.1f;
                     bool cover = false;
                     var target = enemy.EnemyIPlayer.WeaponRoot.position;
                     const float rayDistance = 3f;
@@ -233,18 +291,15 @@ namespace SAIN.SAINComponent.Classes
                     {
                         cover = true;
                     }
-                    HasLimbCover = cover;
+                    _hasLimbCover = cover;
                 }
             }
             else
             {
-                HasLimbCover = false;
+                _hasLimbCover = false;
             }
-            return HasLimbCover;
+            return _hasLimbCover;
         }
-
-        private bool HasLimbCover;
-        private float CheckLimbTimer = 0f;
 
         private bool CheckLimbForCover(BodyPartType bodyPartType, Vector3 target, float dist = 2f)
         {
@@ -255,20 +310,19 @@ namespace SAIN.SAINComponent.Classes
 
         public bool BotIsAtCoverPoint(CoverPoint coverPoint)
         {
-            return coverPoint?.BotInThisCover() == true;
+            return coverPoint?.BotInThisCover == true;
         }
 
         public bool BotIsAtCoverInUse()
         {
-            return CoverInUse?.BotInThisCover() == true;
+            return CoverInUse?.BotInThisCover == true;
         }
 
-        public CoverPoint CoverInUse { get; set; }
-
-        public List<CoverPoint> CoverPoints => CoverFinder.CoverPoints;
-        public CoverFinderComponent CoverFinder { get; private set; }
-        public CoverPoint FallBackPoint => CoverFinder.FallBackPoint;
-
-        public float LastHitTime { get; private set; }
+        private bool _coverEntered;
+        private GUIObject debugCoverObject;
+        private GameObject debugCoverLine;
+        private bool _hasLimbCover;
+        private float _checkLimbsTime = 0f;
+        private CoverPoint _coverInUse;
     }
 }

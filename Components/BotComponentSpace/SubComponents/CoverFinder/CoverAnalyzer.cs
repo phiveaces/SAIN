@@ -56,7 +56,7 @@ namespace SAIN.SAINComponent.SubComponents.CoverFinder
 
             coverPoint.Position = newPosition;
 
-            if (coverPoint.Status == CoverStatus.InCover) {
+            if (coverPoint.StraightDistanceStatus == CoverStatus.InCover) {
                 return true;
             }
 

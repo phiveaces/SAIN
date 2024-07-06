@@ -3,7 +3,7 @@ using SAIN.Attributes;
 
 namespace SAIN
 {
-    public enum SoloDecision
+    public enum CombatDecision
     {
         None,
         Retreat,
@@ -40,6 +40,14 @@ namespace SAIN
         None,
         FriendlyBlock,
         Clear,
+    }
+    
+    public enum EHeardFromPeaceBehavior
+    {
+        None,
+        Freeze,
+        SearchNow,
+        Charge,
     }
 
     public enum EWeaponClass

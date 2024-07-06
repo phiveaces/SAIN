@@ -9,28 +9,77 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using static UnityEngine.EventSystems.EventTrigger;
 
 namespace SAIN.BotController.Classes
 {
     public class Squad
     {
-        public readonly Dictionary<ESquadRole, BotComponent> Roles
-            = new Dictionary<ESquadRole, BotComponent>();
+        public event Action<CombatDecision, SquadDecision, SelfDecision, BotComponent> OnMemberDecisionMade;
+        public event Action<EnemyPlace, Enemy, SAINSoundType> OnMemberHeardEnemy;
+        public event Action<Squad> OnSquadEmpty;
+        public event Action<IPlayer, DamageInfo, float> LeaderKilled;
+        public event Action<IPlayer, DamageInfo, float> OnMemberKilled;
+        public event Action<BotComponent, float> NewLeaderFound;
+
+        public Dictionary<string, BotComponent> Members { get; } = new Dictionary<string, BotComponent>();
+        public Dictionary<string, MemberInfo> MemberInfos { get; } = new Dictionary<string, MemberInfo>();
+        public string Id { get; private set; } = string.Empty;
+        public string GUID { get; } = Guid.NewGuid().ToString("N");
+        public bool SquadReady { get; private set; }
+        public ESquadPersonality SquadPersonality { get; private set; }
+        public SquadPersonalitySettings SquadPersonalitySettings { get; private set; }
+        public BotComponent LeaderComponent { get; private set; }
+        public string LeaderId { get; private set; }
+        public float LeaderPowerLevel { get; private set; }
+        public bool LeaderIsDeadorNull => LeaderComponent?.Player == null || LeaderComponent?.Player?.HealthController.IsAlive == false;
+        public float TimeThatLeaderDied { get; private set; }
+        public List<PlaceForCheck> GroupPlacesForCheck => _botsGroup?.PlacesForCheck;
+        public Dictionary<ESquadRole, BotComponent> Roles { get; } = new Dictionary<ESquadRole, BotComponent>();
+        public Dictionary<string, PlaceForCheck> PlayerPlaceChecks { get; } = new Dictionary<string, PlaceForCheck>();
+
+        public bool MemberIsFallingBack
+        {
+            get
+            {
+                return MemberHasDecision(CombatDecision.Retreat, CombatDecision.RunAway, CombatDecision.RunToCover);
+            }
+        }
+
+        public bool MemberIsRegrouping
+        {
+            get
+            {
+                return MemberHasDecision(SquadDecision.Regroup);
+            }
+        }
+
+        public float SquadPowerLevel
+        {
+            get
+            {
+                float result = 0f;
+                foreach (var memberInfo in MemberInfos.Values)
+                {
+                    if (memberInfo.Bot != null && memberInfo.Bot.IsDead == false)
+                    {
+                        result += memberInfo.PowerLevel;
+                    }
+                }
+                return result;
+            }
+        }
 
         public Squad()
         {
-            CheckSquadTimer = Time.time + 10f;
+            _checkSquadTime = Time.time + 10f;
             PresetHandler.OnPresetUpdated += updateSettings;
             updateSettings(SAINPresetClass.Instance);
         }
 
         private void updateSettings(SAINPresetClass preset)
         {
-            maxReportActionRangeSqr = preset.GlobalSettings.Hearing.MaxRangeToReportEnemyActionNoHeadset.Sqr();
+            _maxReportActionRangeSqr = preset.GlobalSettings.Hearing.MaxRangeToReportEnemyActionNoHeadset.Sqr();
         }
-
-        private float maxReportActionRangeSqr;
 
         public void ReportEnemyPosition(Enemy reportedEnemy, EnemyPlace place, bool seen)
         {
@@ -92,15 +141,11 @@ namespace SAIN.BotController.Classes
             return false;
         }
 
-        public List<PlaceForCheck> GroupPlacesForCheck => EFTBotGroup?.PlacesForCheck;
-
         public enum ESearchPointType
         {
             Hearing,
             Flashlight,
         }
-
-        public Action<EnemyPlace, Enemy, SAINSoundType> OnEnemyHeard { get; set; }
 
         public void AddPointToSearch(BotSoundStruct sound, BotComponent sain)
         {
@@ -117,19 +162,21 @@ namespace SAIN.BotController.Classes
 
         private void addPlaceForCheck(Vector3 position, SAINSoundType soundType, BotComponent bot, Enemy enemy, bool heard)
         {
-            if (EFTBotGroup == null)
+            if (_botsGroup == null)
             {
-                EFTBotGroup = bot.BotOwner.BotsGroup;
+                _botsGroup = bot.BotOwner.BotsGroup;
             }
+
+            position.y = enemy.EnemyPosition.y;
 
             AISoundType baseSoundType = soundType.Convert();
             bool isDanger = baseSoundType == AISoundType.step ? false : true;
             PlaceForCheckType checkType = isDanger ? PlaceForCheckType.danger : PlaceForCheckType.simple;
-            PlaceForCheck newPlace = AddNewPlaceForCheck(bot.BotOwner, position, checkType, enemy.EnemyIPlayer);
+            PlaceForCheck newPlace = addNewPlaceForCheck(bot.BotOwner, position, checkType, enemy.EnemyIPlayer);
             Vector3 pos = newPlace?.Position ?? position;
             EnemyPlace place = enemy.Hearing.SetHeard(pos, soundType, true);
             if (heard)
-                OnEnemyHeard?.Invoke(place, enemy, soundType);
+                OnMemberHeardEnemy?.Invoke(place, enemy, soundType);
         }
 
         public void AddPointToSearch(Vector3 position, float soundPower, BotComponent sain, AISoundType soundType, IPlayer player, ESearchPointType searchType = ESearchPointType.Hearing)
@@ -144,14 +191,12 @@ namespace SAIN.BotController.Classes
             addPlaceForCheck(position, soundType.Convert(), sain, enemy, false);
         }
 
-        public readonly Dictionary<string, PlaceForCheck> PlayerPlaceChecks = new Dictionary<string, PlaceForCheck>();
-
-        private PlaceForCheck AddNewPlaceForCheck(BotOwner botOwner, Vector3 position, PlaceForCheckType checkType, IPlayer player)
+        private PlaceForCheck addNewPlaceForCheck(BotOwner botOwner, Vector3 position, PlaceForCheckType checkType, IPlayer player)
         {
             const float navSampleDist = 10f;
             const float dontLerpDist = 50f;
 
-            if (FindNavMesh(position, out Vector3 hitPosition, navSampleDist))
+            if (findNavMesh(position, out Vector3 hitPosition, navSampleDist))
             {
                 // Too many places were being sent to a bot, causing confused behavior.
                 // This way I'm tying 1 placeforcheck to each player and updating it based on new info.
@@ -162,32 +207,32 @@ namespace SAIN.BotController.Classes
                     {
                         Vector3 averagePosition = averagePosition = Vector3.Lerp(oldPlace.BasePoint, hitPosition, 0.5f);
 
-                        if (FindNavMesh(averagePosition, out hitPosition, navSampleDist)
-                            && CanPathToPoint(hitPosition, botOwner) != NavMeshPathStatus.PathInvalid)
+                        if (findNavMesh(averagePosition, out hitPosition, navSampleDist)
+                            && canPathToPoint(hitPosition, botOwner) != NavMeshPathStatus.PathInvalid)
                         {
                             GroupPlacesForCheck.Remove(oldPlace);
                             PlaceForCheck replacementPlace = new PlaceForCheck(hitPosition, checkType);
                             GroupPlacesForCheck.Add(replacementPlace);
                             PlayerPlaceChecks[player.ProfileId] = replacementPlace;
-                            CalcGoalForBot(botOwner);
+                            calcGoalForBot(botOwner);
                             return replacementPlace;
                         }
                     }
                 }
 
-                if (CanPathToPoint(hitPosition, botOwner) != NavMeshPathStatus.PathInvalid)
+                if (canPathToPoint(hitPosition, botOwner) != NavMeshPathStatus.PathInvalid)
                 {
                     PlaceForCheck newPlace = new PlaceForCheck(position, checkType);
                     GroupPlacesForCheck.Add(newPlace);
                     AddOrUpdatePlaceForPlayer(newPlace, player);
-                    CalcGoalForBot(botOwner);
+                    calcGoalForBot(botOwner);
                     return newPlace;
                 }
             }
             return null;
         }
 
-        private bool FindNavMesh(Vector3 position, out Vector3 hitPosition, float navSampleDist = 5f)
+        private bool findNavMesh(Vector3 position, out Vector3 hitPosition, float navSampleDist = 2f)
         {
             if (NavMesh.SamplePosition(position, out NavMeshHit hit, navSampleDist, -1))
             {
@@ -198,14 +243,14 @@ namespace SAIN.BotController.Classes
             return false;
         }
 
-        private NavMeshPathStatus CanPathToPoint(Vector3 point, BotOwner botOwner)
+        private NavMeshPathStatus canPathToPoint(Vector3 point, BotOwner botOwner)
         {
             NavMeshPath path = new NavMeshPath();
             NavMesh.CalculatePath(botOwner.Position, point, -1, path);
             return path.status;
         }
 
-        private void CalcGoalForBot(BotOwner botOwner)
+        private void calcGoalForBot(BotOwner botOwner)
         {
             try
             {
@@ -256,7 +301,7 @@ namespace SAIN.BotController.Classes
                     {
                         try
                         {
-                            EFTBotGroup?.CalcGoalForBot(bot.BotOwner);
+                            _botsGroup?.CalcGoalForBot(bot.BotOwner);
                         }
                         catch
                         {
@@ -267,52 +312,11 @@ namespace SAIN.BotController.Classes
             }
         }
 
-        private BotsGroup EFTBotGroup;
-
-        public string Id { get; private set; } = string.Empty;
-
-        public readonly string GUID = Guid.NewGuid().ToString("N");
-
-        public bool SquadReady { get; private set; }
-
-        public Action<IPlayer, DamageInfo, float> LeaderKilled { get; set; }
-
-        public Action<IPlayer, DamageInfo, float> MemberKilled { get; set; }
-
-        public Action<BotComponent, float> NewLeaderFound { get; set; }
-
-        public bool LeaderIsDeadorNull => LeaderComponent?.Player == null || LeaderComponent?.Player?.HealthController.IsAlive == false;
-
-        public float TimeThatLeaderDied { get; private set; }
-
-        public const float FindLeaderAfterKilledCooldown = 60f;
-
-        public BotComponent LeaderComponent { get; private set; }
-        public string LeaderId { get; private set; }
-
-        public float LeaderPowerLevel { get; private set; }
-
-        public bool MemberIsFallingBack
-        {
-            get
-            {
-                return MemberHasDecision(SoloDecision.Retreat, SoloDecision.RunAway, SoloDecision.RunToCover);
-            }
-        }
-
-        public bool MemberIsRegrouping
-        {
-            get
-            {
-                return MemberHasDecision(SquadDecision.Regroup);
-            }
-        }
-
-        public bool MemberHasDecision(params SoloDecision[] decisionsToCheck)
+        public bool MemberHasDecision(params CombatDecision[] decisionsToCheck)
         {
             foreach (var member in MemberInfos.Values)
             {
-                if (member != null && member.SAIN != null)
+                if (member != null && member.Bot != null)
                 {
                     var memberDecision = member.SoloDecision;
                     foreach (var decision in decisionsToCheck)
@@ -331,7 +335,7 @@ namespace SAIN.BotController.Classes
         {
             foreach (var member in MemberInfos.Values)
             {
-                if (member != null && member.SAIN != null)
+                if (member != null && member.Bot != null)
                 {
                     var memberDecision = member.SquadDecision;
                     foreach (var decision in decisionsToCheck)
@@ -350,7 +354,7 @@ namespace SAIN.BotController.Classes
         {
             foreach (var member in MemberInfos.Values)
             {
-                if (member != null && member.SAIN != null)
+                if (member != null && member.Bot != null)
                 {
                     var memberDecision = member.SelfDecision;
                     foreach (var decision in decisionsToCheck)
@@ -365,26 +369,7 @@ namespace SAIN.BotController.Classes
             return false;
         }
 
-        public float SquadPowerLevel
-        {
-            get
-            {
-                float result = 0f;
-                foreach (var memberInfo in MemberInfos.Values)
-                {
-                    if (memberInfo.SAIN != null && memberInfo.SAIN.IsDead == false)
-                    {
-                        result += memberInfo.PowerLevel;
-                    }
-                }
-                return result;
-            }
-        }
-
-        public ESquadPersonality SquadPersonality { get; private set; }
-        public SquadPersonalitySettings SquadPersonalitySettings { get; private set; }
-
-        private void GetSquadPersonality()
+        private void getSquadPersonality()
         {
             SquadPersonality = SquadPersonalityManager.GetSquadPersonality(Members, out var settings);
             SquadPersonalitySettings = settings;
@@ -395,15 +380,15 @@ namespace SAIN.BotController.Classes
             // After 10 seconds since squad is originally created,
             // find a squad leader and activate the squad to give time for all bots to spawn in
             // since it can be staggered over a few seconds.
-            if (!SquadReady && CheckSquadTimer < Time.time && Members.Count > 0)
+            if (!SquadReady && _checkSquadTime < Time.time && Members.Count > 0)
             {
                 SquadReady = true;
-                FindSquadLeader();
+                findSquadLeader();
                 // Timer before starting to recheck
-                RecheckSquadTimer = Time.time + 10f;
+                _recheckSquadTime = Time.time + 10f;
                 if (Members.Count > 1)
                 {
-                    GetSquadPersonality();
+                    getSquadPersonality();
                 }
             }
 
@@ -411,13 +396,13 @@ namespace SAIN.BotController.Classes
             // Wait until all members are out of combat to find a squad leader, or 60 seconds have passed to find a new squad leader is they are KIA
             if (SquadReady)
             {
-                if (RecheckSquadTimer < Time.time && LeaderIsDeadorNull)
+                if (_recheckSquadTime < Time.time && LeaderIsDeadorNull)
                 {
-                    RecheckSquadTimer = Time.time + 3f;
+                    _recheckSquadTime = Time.time + 3f;
 
-                    if (TimeThatLeaderDied < Time.time + FindLeaderAfterKilledCooldown)
+                    if (TimeThatLeaderDied < Time.time + LEADER_KILL_COOLDOWN)
                     {
-                        FindSquadLeader();
+                        findSquadLeader();
                     }
                     else
                     {
@@ -432,7 +417,7 @@ namespace SAIN.BotController.Classes
                         }
                         if (outOfCombat)
                         {
-                            FindSquadLeader();
+                            findSquadLeader();
                         }
                     }
                 }
@@ -462,7 +447,7 @@ namespace SAIN.BotController.Classes
                 {
                     return true;
                 }
-                if ((a.Position - b.Position).sqrMagnitude <= maxReportActionRangeSqr)
+                if ((a.Position - b.Position).sqrMagnitude <= _maxReportActionRangeSqr)
                 {
                     return true;
                 }
@@ -501,10 +486,7 @@ namespace SAIN.BotController.Classes
             }
         }
 
-        private float RecheckSquadTimer;
-        private float CheckSquadTimer;
-
-        private void MemberWasKilled(Player player, IPlayer lastAggressor, DamageInfo lastDamageInfo, EBodyPart lastBodyPart)
+        private void memberWasKilled(Player player, IPlayer lastAggressor, DamageInfo lastDamageInfo, EBodyPart lastBodyPart)
         {
             if (SAINPlugin.DebugMode)
             {
@@ -518,7 +500,7 @@ namespace SAIN.BotController.Classes
                     );
             }
 
-            MemberKilled?.Invoke(lastAggressor, lastDamageInfo, Time.time);
+            OnMemberKilled?.Invoke(lastAggressor, lastDamageInfo, Time.time);
 
             if (MemberInfos.TryGetValue(player?.ProfileId, out var member)
                 && member != null)
@@ -546,7 +528,7 @@ namespace SAIN.BotController.Classes
             RemoveMember(sain?.ProfileId);
         }
 
-        private void FindSquadLeader()
+        private void findSquadLeader()
         {
             float power = 0f;
             BotComponent leadComponent = null;
@@ -554,15 +536,15 @@ namespace SAIN.BotController.Classes
             // Iterate through each memberInfo memberInfo in friendly group to see who has the highest power level or if any are bosses
             foreach (var memberInfo in MemberInfos.Values)
             {
-                if (memberInfo.SAIN == null || memberInfo.SAIN.IsDead) continue;
+                if (memberInfo.Bot == null || memberInfo.Bot.IsDead) continue;
 
                 // If this memberInfo is a boss type, they are the squad leader
-                bool isBoss = memberInfo.SAIN.Info.Profile.IsBoss;
+                bool isBoss = memberInfo.Bot.Info.Profile.IsBoss;
                 // or If this memberInfo has a higher power level than the last one we checked, they are the squad leader
                 if (isBoss || memberInfo.PowerLevel > power)
                 {
                     power = memberInfo.PowerLevel;
-                    leadComponent = memberInfo.SAIN;
+                    leadComponent = memberInfo.Bot;
 
                     if (isBoss)
                     {
@@ -573,11 +555,11 @@ namespace SAIN.BotController.Classes
 
             if (leadComponent != null)
             {
-                AssignSquadLeader(leadComponent);
+                assignSquadLeader(leadComponent);
             }
         }
 
-        private void AssignSquadLeader(BotComponent sain)
+        private void assignSquadLeader(BotComponent sain)
         {
             if (sain?.Player == null)
             {
@@ -602,44 +584,51 @@ namespace SAIN.BotController.Classes
             }
         }
 
-        public void AddMember(BotComponent sain)
+        public void AddMember(BotComponent bot)
         {
             // Make sure nothing is null as a safety check.
-            if (sain?.Player != null && sain.BotOwner != null)
+            if (bot?.Player != null && bot.BotOwner != null)
             {
                 // Make sure this profile ID doesn't already exist for whatever reason
-                if (!Members.ContainsKey(sain.ProfileId))
+                if (!Members.ContainsKey(bot.ProfileId))
                 {
                     // If this is the first member, add their side to the start of their ID for easier identifcation during debug
                     if (Members.Count == 0)
                     {
-                        EFTBotGroup = sain.BotOwner.BotsGroup;
-                        Id = sain.Player.Profile.Side.ToString() + "_" + GUID;
+                        _botsGroup = bot.BotOwner.BotsGroup;
+                        Id = bot.Player.Profile.Side.ToString() + "_" + GUID;
                     }
 
-                    var memberInfo = new MemberInfo(sain);
-                    MemberInfos.Add(sain.ProfileId, memberInfo);
-                    Members.Add(sain.ProfileId, sain);
+                    bot.Decision.OnDecisionMade += memberMadeDecision;
+
+                    var memberInfo = new MemberInfo(bot, this);
+                    MemberInfos.Add(bot.ProfileId, memberInfo);
+                    Members.Add(bot.ProfileId, bot);
 
                     // if this new member is a boss, set them to leader automatically
-                    if (sain.Info.Profile.IsBoss)
+                    if (bot.Info.Profile.IsBoss)
                     {
-                        AssignSquadLeader(sain);
+                        assignSquadLeader(bot);
                     }
                     // If this new memberInfo has a higher power level than the existing squad leader, set them as the new squad leader if they aren't a boss type
-                    else if (LeaderComponent != null && sain.Info.Profile.PowerLevel > LeaderPowerLevel && !LeaderComponent.Info.Profile.IsBoss)
+                    else if (LeaderComponent != null && bot.Info.Profile.PowerLevel > LeaderPowerLevel && !LeaderComponent.Info.Profile.IsBoss)
                     {
-                        AssignSquadLeader(sain);
+                        assignSquadLeader(bot);
                     }
 
                     // Subscribe when this member is killed
-                    sain.Player.OnPlayerDead += MemberWasKilled;
+                    bot.Player.OnPlayerDead += memberWasKilled;
                     if (Members.Count > 1)
                     {
-                        GetSquadPersonality();
+                        getSquadPersonality();
                     }
                 }
             }
+        }
+
+        private void memberMadeDecision(CombatDecision solo, SquadDecision squad, SelfDecision self, BotComponent member)
+        {
+            OnMemberDecisionMade?.Invoke(solo, squad, self, member);
         }
 
         public void RemoveMember(BotComponent sain)
@@ -655,11 +644,12 @@ namespace SAIN.BotController.Classes
             }
             if (MemberInfos.TryGetValue(id, out var memberInfo))
             {
-                Player player = memberInfo.SAIN?.Player;
+                Player player = memberInfo.Bot?.Player;
                 if (player != null)
                 {
-                    player.OnPlayerDead -= MemberWasKilled;
+                    player.OnPlayerDead -= memberWasKilled;
                 }
+                memberInfo.Bot.Decision.OnDecisionMade -= memberMadeDecision;
                 memberInfo.Dispose();
                 MemberInfos.Remove(id);
             }
@@ -669,9 +659,10 @@ namespace SAIN.BotController.Classes
             }
         }
 
-        public Action<Squad> OnSquadEmpty { get; set; }
-
-        public readonly Dictionary<string, BotComponent> Members = new Dictionary<string, BotComponent>();
-        public readonly Dictionary<string, MemberInfo> MemberInfos = new Dictionary<string, MemberInfo>();
+        private BotsGroup _botsGroup;
+        private float _recheckSquadTime;
+        private float _checkSquadTime;
+        private float _maxReportActionRangeSqr;
+        public const float LEADER_KILL_COOLDOWN = 60f;
     }
 }

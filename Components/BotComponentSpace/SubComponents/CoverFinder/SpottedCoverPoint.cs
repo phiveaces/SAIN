@@ -4,10 +4,12 @@ namespace SAIN.SAINComponent.SubComponents.CoverFinder
 {
     public class SpottedCoverPoint
     {
-        public SpottedCoverPoint(CoverPoint coverPoint, float expireTime = 2f)
+        public const float SPOTTED_PERIOD = 2f;
+
+        public SpottedCoverPoint(CoverPoint coverPoint)
         {
+            ExpireTime = SPOTTED_PERIOD;
             CoverPoint = coverPoint;
-            ExpireTime = expireTime;
             TimeCreated = Time.time;
         }
 

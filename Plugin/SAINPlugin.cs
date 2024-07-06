@@ -35,7 +35,7 @@ namespace SAIN
         public static bool DrawDebugGizmos => DebugSettings.DrawDebugGizmos;
         public static PresetEditorDefaults EditorDefaults => PresetHandler.EditorDefaults;
 
-        public static SoloDecision ForceSoloDecision = SoloDecision.None;
+        public static CombatDecision ForceSoloDecision = CombatDecision.None;
 
         public static SquadDecision ForceSquadDecision = SquadDecision.None;
 

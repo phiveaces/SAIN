@@ -37,8 +37,13 @@ namespace SAIN.SAINComponent.Classes.Info
                 return false;
             }
             _nextUpdateTime = Time.time + 10f;
+
+            if (Weapon != null)
+                BulletSpeed = Weapon.CurrentAmmoTemplate.InitialSpeed * SpeedFactor;
+
             checkAllMods();
             //Log();
+
             return true;
         }
 
@@ -46,6 +51,8 @@ namespace SAIN.SAINComponent.Classes.Info
         {
             PresetHandler.OnPresetUpdated -= updateSettings;
         }
+
+        public float BulletSpeed { get; private set; } = 600f;
 
         public float EngagementDistance { get; private set; } = 150f;
 
@@ -99,7 +106,7 @@ namespace SAIN.SAINComponent.Classes.Info
                 {
                     return false;
                 }
-                return Weapon.CurrentAmmoTemplate.InitialSpeed * SpeedFactor < SuperSonicSpeed;
+                return BulletSpeed < SuperSonicSpeed;
             }
         }
 

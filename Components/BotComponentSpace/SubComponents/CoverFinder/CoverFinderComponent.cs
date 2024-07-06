@@ -269,18 +269,18 @@ namespace SAIN.SAINComponent.SubComponents.CoverFinder
             return ProcessingLimited;
         }
 
-        private static bool limitProcessingFromDecision(SoloDecision decision)
+        private static bool limitProcessingFromDecision(CombatDecision decision)
         {
             switch (decision)
             {
-                case SoloDecision.MoveToCover:
-                case SoloDecision.RunToCover:
-                case SoloDecision.Retreat:
-                case SoloDecision.RunAway:
+                case CombatDecision.MoveToCover:
+                case CombatDecision.RunToCover:
+                case CombatDecision.Retreat:
+                case CombatDecision.RunAway:
                     return false;
 
-                case SoloDecision.HoldInCover:
-                case SoloDecision.Search:
+                case CombatDecision.HoldInCover:
+                case CombatDecision.Search:
                     return true;
 
                 default:

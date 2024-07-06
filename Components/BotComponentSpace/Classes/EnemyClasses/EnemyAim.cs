@@ -20,8 +20,8 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
             {
                 if (_getModTime < Time.time)
                 {
-                    _getModTime = Time.time + 0.1f;
-                    _modifier = _poseFactor * _visibilityFactor * _opticFactor * _injuryFactor;
+                    _getModTime = Time.time + 0.05f;
+                    _modifier = _poseFactor * _visibilityFactor * _opticFactor * _injuryFactor * _velocityFactor;
                 }
                 return _modifier;
             }
@@ -125,6 +125,18 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
                     _visFactor = calcVisFactor();
                 }
                 return _visFactor;
+            }
+        }
+
+        private float _velocityFactor
+        {
+            get
+            {
+                if (Enemy.Player.IsSprintEnabled)
+                {
+                    return _aimSettings.EnemySprintingScatterMulti;
+                }
+                return Mathf.Lerp(_aimSettings.EnemyVelocityMaxDebuff, _aimSettings.EnemyVelocityMaxBuff, 1f - Enemy.EnemyTransform.VelocityMagnitudeNormal);
             }
         }
 

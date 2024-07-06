@@ -11,7 +11,7 @@
             None,
             DontWantTo,
             PathCalcFailed,
-            NullDestination,
+            NullTargetPlace,
         }
 
         public struct WantSearchReasonsStruct
@@ -30,20 +30,26 @@
             WontSearchFromAudio,
             CantStart,
             ShallNotSearch,
+            AlreadySearchedLastKnown,
         }
 
         public enum EWantToSearchReason
         {
             None,
+            HeardFromPeaceSearchNow,
             BeingStealthy,
             NewSearch_Looting,
             NewSearch_PowerLevel,
             NewSearch_EnemyNotSeen,
+            NewSearch_EnemyNotSeen_Squad,
             NewSearch_EnemyNotHeard,
+            NewSearch_EnemyNotHeard_Squad,
             ContinueSearch_Looting,
             ContinueSearch_PowerLevel,
-            ContinueSearch_EnemyNotSeen,
+            ContinueSearch_EnemyNotSeen_Personal,
+            ContinueSearch_EnemyNotSeen_Squad,
             ContinueSearch_EnemyNotHeard,
+            ContinueSearch_EnemyNotHeard_Squad,
         }
 
         public enum ECantStartReason

@@ -8,6 +8,32 @@ namespace SAIN.Helpers
 {
     public static class Extensions
     {
+        public static bool isLegs(this EBodyPart part)
+        {
+            switch (part)
+            {
+                case EBodyPart.LeftLeg:
+                case EBodyPart.RightLeg:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        public static bool isArms(this EBodyPart part)
+        {
+            switch (part)
+            {
+                case EBodyPart.LeftArm:
+                case EBodyPart.RightArm:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
         public static Vector3? LastCorner(this NavMeshPath path)
         {
             if (path == null) return null;

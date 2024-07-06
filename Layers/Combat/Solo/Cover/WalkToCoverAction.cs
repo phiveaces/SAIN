@@ -169,8 +169,6 @@ namespace SAIN.Layers.Combat.Solo.Cover
             {
                 return;
             }
-
-            BotOwner.AimingData?.LoseTarget();
              
             suppressing = true;
             Bot.Enemy.Status.EnemyIsSuppressed = true;
@@ -233,7 +231,7 @@ namespace SAIN.Layers.Combat.Solo.Cover
             if (_coverDestination != null)
             {
                 stringBuilder.AppendLine("Cover Destination");
-                stringBuilder.AppendLabeledValue("Status", $"{_coverDestination.Status}", Color.white, Color.yellow, true);
+                stringBuilder.AppendLabeledValue("Status", $"{_coverDestination.StraightDistanceStatus}", Color.white, Color.yellow, true);
                 stringBuilder.AppendLabeledValue("Height / Value", $"{_coverDestination.CoverHeight} {_coverDestination.CoverValue}", Color.white, Color.yellow, true);
                 stringBuilder.AppendLabeledValue("Path Length", $"{_coverDestination.PathLength}", Color.white, Color.yellow, true);
                 stringBuilder.AppendLabeledValue("Straight Distance", $"{(_coverDestination.Position - Bot.Position).magnitude}", Color.white, Color.yellow, true);

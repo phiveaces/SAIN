@@ -34,8 +34,6 @@ namespace SAIN.SAINComponent.Classes.Info
 
         public Dictionary<string, BotComponent> Members => SquadInfo?.Members;
 
-        public bool MemberIsFallingBack => SquadInfo?.MemberIsFallingBack == true;
-
         public bool HumanFriendClose
         {
             get
@@ -64,7 +62,7 @@ namespace SAIN.SAINComponent.Classes.Info
                 {
                     return true;
                 }
-            }
+            }         
             return false;
         }
 

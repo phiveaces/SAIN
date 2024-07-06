@@ -46,11 +46,6 @@ namespace SAIN.SAINComponent.Classes
             {
                 return;
             }
-            if (Bot.Player.IsSprintEnabled)
-            {
-                BotOwner.AimingData?.LoseTarget();
-                return;
-            }
 
             if (BotOwner.WeaponManager.Selector.EquipmentSlot == EquipmentSlot.Holster
                 && !BotOwner.WeaponManager.HaveBullets
@@ -59,16 +54,15 @@ namespace SAIN.SAINComponent.Classes
                 selectWeapon();
             }
 
+            if (!Bot.Aim.CanAim)
+            {
+                return;
+            }
+
             if (changeAimTimer < Time.time)
             {
                 changeAimTimer = Time.time + 0.5f;
                 Bot.AimDownSightsController.UpdateADSstatus();
-            }
-
-            if (BotOwner.WeaponManager.Reload.Reloading)
-            {
-                BotOwner.AimingData?.LoseTarget();
-                return;
             }
 
             Bot.BotLight.HandleLightForEnemy();

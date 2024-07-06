@@ -1,16 +1,9 @@
 ﻿using EFT;
-using EFT.Interactive;
-using HarmonyLib;
 using SAIN.Helpers;
 using SAIN.Preset.GlobalSettings;
-using SAIN.Preset.GlobalSettings.Categories;
-using SAIN.SAINComponent.SubComponents.CoverFinder;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -34,7 +27,9 @@ namespace SAIN.SAINComponent.Classes.Mover
     public class SAINSprint : BotBase, IBotClass
     {
         public event Action<Vector3, Vector3> OnNewCornerMoveTo;
+
         public event Action<Vector3, Vector3> OnNewSprint;
+
         public event Action OnSprintEnd;
 
         public SAINSprint(BotComponent sain) : base(sain)
@@ -58,17 +53,16 @@ namespace SAIN.SAINComponent.Classes.Mover
         {
             if (Running)
             {
-                if (Canceling)
+                if (afterTime <= 0)
                 {
+                    stopRunCoroutine();
                     return;
                 }
-                if (afterTime > 0f)
+                if (!Canceling)
                 {
                     Canceling = true;
                     Bot.StartCoroutine(cancelRunAfterTime(afterTime));
-                    return;
                 }
-                stopRunCoroutine();
             }
         }
 
@@ -89,8 +83,7 @@ namespace SAIN.SAINComponent.Classes.Mover
         private IEnumerator cancelRunAfterTime(float afterTime)
         {
             yield return new WaitForSeconds(afterTime);
-            Canceling = false;
-            CancelRun(-1f);
+            stopRunCoroutine();
         }
 
         public bool RunToPointByWay(NavMeshPath way, ESprintUrgency urgency, bool stopSprintEnemyVisible, bool checkSameWay = true, System.Action callback = null)
@@ -290,7 +283,7 @@ namespace SAIN.SAINComponent.Classes.Mover
                     handleSprinting(distToCurrent, urgency);
 
                     Vector3 destination = CurrentCornerDestination();
-                    if (!Bot.DoorOpener.Interacting && 
+                    if (!Bot.DoorOpener.Interacting &&
                         !Bot.DoorOpener.BreachingDoor)
                     {
                         trackMovement();
@@ -320,7 +313,7 @@ namespace SAIN.SAINComponent.Classes.Mover
                     float speed = IsSprintEnabled ? _moveSettings.BotSprintTurnSpeedWhileSprint : _moveSettings.BotSprintTurningSpeed;
                     float dotProduct = steer(destination, speed);
 
-                    //if (onLastCorner() && 
+                    //if (onLastCorner() &&
                     //    distToCurrent <= _moveSettings.BotSprintFinalDestReachDist)
                     //{
                     //    yield break;
@@ -455,7 +448,7 @@ namespace SAIN.SAINComponent.Classes.Mover
             }
 
             // If we arne't already sprinting, and our corner were moving to is far enough away, and I have enough stamina, and the angle isn't too sharp... enable sprint
-            if (shallStartSprintStamina(staminaValue, urgency) && 
+            if (shallStartSprintStamina(staminaValue, urgency) &&
                 _timeStartCorner + 0.25f < Time.time)
             {
                 Bot.Mover.EnableSprintPlayer(true);

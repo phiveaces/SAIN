@@ -173,7 +173,7 @@ namespace SAIN.SAINComponent.Classes.Decision
             {
                 return false;
             }
-            if (member.Decision.CurrentSoloDecision != SoloDecision.Retreat)
+            if (member.Decision.CurrentSoloDecision != CombatDecision.Retreat)
             {
                 return false;
             }
@@ -190,7 +190,7 @@ namespace SAIN.SAINComponent.Classes.Decision
 
         private bool shallGroupSearch(BotComponent member)
         {
-            bool squadSearching = member.Decision.CurrentSoloDecision == SoloDecision.Search || member.Decision.CurrentSquadDecision == SquadDecision.Search;
+            bool squadSearching = member.Decision.CurrentSoloDecision == CombatDecision.Search || member.Decision.CurrentSquadDecision == SquadDecision.Search;
             if (squadSearching)
             {
                 return true;
@@ -202,7 +202,7 @@ namespace SAIN.SAINComponent.Classes.Decision
         {
             foreach (var member in Bot.Squad.Members.Values)
             {
-                if (member.Decision.CurrentSoloDecision == SoloDecision.Search)
+                if (member.Decision.CurrentSoloDecision == CombatDecision.Search)
                 {
                     if (Bot.Enemy != null
                         && doesMemberShareEnemy(member))

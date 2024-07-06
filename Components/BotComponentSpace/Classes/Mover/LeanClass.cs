@@ -16,11 +16,11 @@ namespace SAIN.SAINComponent.Classes.Mover
             base.SubscribeToPreset(null);
         }
 
-        private static readonly SoloDecision[] DontLean =
+        private static readonly CombatDecision[] DontLean =
         {
-            SoloDecision.Retreat,
-            SoloDecision.RunToCover,
-            SoloDecision.RunAway,
+            CombatDecision.Retreat,
+            CombatDecision.RunToCover,
+            CombatDecision.RunAway,
         };
 
         public void Update()
@@ -48,7 +48,7 @@ namespace SAIN.SAINComponent.Classes.Mover
                 ResetLean();
                 return;
             }
-            if (CurrentDecision == SoloDecision.HoldInCover)
+            if (CurrentDecision == CombatDecision.HoldInCover)
             {
                 return;
             }

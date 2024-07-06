@@ -16,6 +16,28 @@ namespace SAIN.Components
     public class GameWorldComponent : MonoBehaviour
     {
         public bool WinterActive => WinterStatus == ESeasonStatus.Winter;
+        public event Action<Door, EDoorState, bool> OnDoorStateChanged;
+        public event Action<bool> OnDoorsDisabled;
+
+        public void ChangeDoorState(Door door, EDoorState state, bool shallInvert)
+        {
+            if (shallInvert)
+                door.OpenAngle = -door.OpenAngle;
+
+            door.method_3(state);
+            OnDoorStateChanged?.Invoke(door, state, shallInvert);
+
+            if (shallInvert)
+                door.OpenAngle = -door.OpenAngle;
+        }
+
+        public void HostDisabledDoors(bool value)
+        {
+            _doorsDisabledByHost = value;
+        }
+
+        private bool _doorsDisabledByHost;
+
 
         public static GameWorldComponent Instance { get; set; }
         public ELocation Location { get; private set; }
@@ -58,22 +80,49 @@ namespace SAIN.Components
             }
         }
 
+
         private void checkDoors()
         {
+            if (Singleton<IBotGame>.Instance == null) { return; }
+
+            bool shallDisable = _doorsDisabledByHost || GlobalSettingsClass.Instance.General.DisableAllDoors;
+
             if (!_doorsDisabled &&
-                GlobalSettingsClass.Instance.General.DisableAllDoors)
+                shallDisable)
             {
+                OnDoorsDisabled?.Invoke(true);
                 _doorsDisabled = true; 
                 disableDoors();
                 return;
             }
             if (_doorsDisabled &&
-                !GlobalSettingsClass.Instance.General.DisableAllDoors)
+                !shallDisable)
             {
+                OnDoorsDisabled?.Invoke(false);
                 _doorsDisabled = false;
                 enableDoors();
                 return;
             }
+        }
+
+        public bool DisableDoor(Door door)
+        {
+            // We don't support doors that don't start open/closed
+            if (door.DoorState != EDoorState.Open && door.DoorState != EDoorState.Shut)
+                return false;
+
+            // We don't support non-operatable doors
+            if (!door.Operatable || !door.enabled)
+                return false;
+
+            // We don't support doors that aren't on the "Interactive" layer
+            if (door.gameObject.layer != LayerMaskClass.InteractiveLayer)
+                return false;
+
+            door.gameObject.SmartDisable();
+            door.enabled = false;
+            _disabledDoors.Add(door);
+            return true;
         }
 
         private void disableDoors()
@@ -82,22 +131,8 @@ namespace SAIN.Components
             // Code taken from Drakia's Door Randomizer Mod
             FindObjectsOfType<Door>().ExecuteForEach(door =>
             {
-                // We don't support doors that don't start open/closed
-                if (door.DoorState != EDoorState.Open && door.DoorState != EDoorState.Shut)
-                    return;
-
-                // We don't support non-operatable doors
-                if (!door.Operatable || !door.enabled)
-                    return;
-
-                // We don't support doors that aren't on the "Interactive" layer
-                if (door.gameObject.layer != LayerMaskClass.InteractiveLayer)
-                    return;
-
-                doorCount++;
-                door.gameObject.SmartDisable();
-                door.enabled = false;
-                _disabledDoors.Add(door);
+                if (DisableDoor(door))
+                    doorCount++;
             });
 
             _doorsDisabled = true;

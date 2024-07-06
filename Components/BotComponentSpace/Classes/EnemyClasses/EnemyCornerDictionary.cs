@@ -1,4 +1,5 @@
-﻿using SAIN.Components.PlayerComponentSpace.PersonClasses;
+﻿using EFT;
+using SAIN.Components.PlayerComponentSpace.PersonClasses;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,10 +7,13 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
 {
     public class EnemyCornerDictionary : Dictionary<ECornerType, EnemyCorner?>
     {
-        public EnemyCornerDictionary(PersonTransformClass transform)
+        public EnemyCornerDictionary(PersonTransformClass transform, BifacialTransform weaponRoot)
         {
             _transform = transform;
+            _weaponRoot = weaponRoot;
         }
+
+        private BifacialTransform _weaponRoot;
 
         public Vector3? GroundPosition(ECornerType type)
         {
@@ -20,13 +24,13 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
         public Vector3? EyeLevelPosition(ECornerType type)
         {
             var corner = GetCorner(type);
-            return corner?.EyeLevelCorner(_transform.EyePosition, _transform.Position);
+            return corner?.EyeLevelCorner(_weaponRoot.position, _transform.Position);
         }
 
         public Vector3? PointPastCorner(ECornerType type)
         {
             var corner = GetCorner(type);
-            return corner?.PointPastCorner(_transform.EyePosition, _transform.Position);
+            return corner?.PointPastCorner(_weaponRoot.position, _transform.Position);
         }
 
         private PersonTransformClass _transform;

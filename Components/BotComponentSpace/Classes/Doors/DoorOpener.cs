@@ -3,6 +3,7 @@ using EFT.Interactive;
 using SAIN.Components;
 using SAIN.Helpers;
 using SAIN.Preset.GlobalSettings;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -89,7 +90,8 @@ namespace SAIN.SAINComponent.Classes.Mover
         private void checkEndDoorOpening()
         {
             //this.BotOwner.Steering.SetYAngle(0f);
-            if (this._traversingEnd < Time.time)
+            if (this._traversingEnd < Time.time || 
+                (_lastInteractedInfo != null && _lastInteractedInfo.Door.DoorState != EDoorState.Interacting))
             {
                 endDoorInteraction();
             }
@@ -235,7 +237,7 @@ namespace SAIN.SAINComponent.Classes.Mover
                     selectedDoor = data;
                 }
             }
-            if (selectedDoor != null && selectedDoor.DotProduct > 0.75f)
+            if (selectedDoor != null && selectedDoor.DotProduct > 0f)
             {
                 return selectedDoor;
             }
@@ -244,12 +246,12 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         private DoorData checkWantToCloseAnyDoors(List<DoorData> doors)
         {
-            float lowestDot = 0f;
+            //float lowestDot = 0f;
             DoorData selectedDoor = null;
             foreach (var data in doors)
             {
-                if (data.DoorInFront)
-                    continue;
+                //if (data.DoorInFront)
+                //    continue;
 
                 NavMeshDoorLink link = data.Link;
                 Door door = link.Door;
@@ -257,11 +259,8 @@ namespace SAIN.SAINComponent.Classes.Mover
                 if (door.DoorState != EDoorState.Open)
                     continue;
 
-                if (data.DotProduct < lowestDot)
-                {
-                    lowestDot = data.DotProduct;
-                    selectedDoor = data;
-                }
+                selectedDoor = data;
+                break;
             }
             return selectedDoor;
         }
@@ -388,10 +387,18 @@ namespace SAIN.SAINComponent.Classes.Mover
             if (gstruct.Succeeded)
             {
                 Logger.LogDebug("Success");
-                Player.vmethod_1(door, gstruct.Value);
+                switch (type)
+                {
+                    case EInteractionType.Breach:
+                        Player.vmethod_0(door, gstruct.Value, new Action(endDoorInteraction));
+                        break;
+
+                    default:
+                        Player.vmethod_1(door, gstruct.Value);
+                        break;
+                }
                 return;
             }
-
             Logger.LogDebug("Fail");
         }
 
@@ -499,15 +506,6 @@ namespace SAIN.SAINComponent.Classes.Mover
 
             Logger.LogDebug($"{BotOwner.name} Auto Opening Door on {doorInfo.Link.Id}");
 
-            //_traversingEnd = Time.time + 0.45f;
-
-            bool inverted = false;
-            if (ShallInvertDoorAngle(door))
-            {
-                inverted = true;
-                door.OpenAngle = -door.OpenAngle;
-            }
-
             EDoorState state = EDoorState.None;
             switch (Etype)
             {
@@ -524,10 +522,9 @@ namespace SAIN.SAINComponent.Classes.Mover
                     return;
             }
 
-            door.method_3(state);
+            bool shallInvert = ShallInvertDoorAngle(door);
+            GameWorldComponent.Instance.ChangeDoorState(door, state, shallInvert);
             SAINBotController.Instance.BotHearing.PlayAISound(PlayerComponent, SAINSoundType.Door, door.transform.position, 30f, 1f, true);
-            if (inverted)
-                door.OpenAngle = -door.OpenAngle;
         }
 
         private bool ShallInvertDoorAngle(Door door)
@@ -542,33 +539,6 @@ namespace SAIN.SAINComponent.Classes.Mover
                 return false;
             }
             return true;
-        }
-
-        public bool isDoorInLookDirection(NavMeshDoorLink link)
-        {
-            GClass297 gclass = null;
-            EDoorState doorState = link.Door.DoorState;
-
-            switch (link.Door.DoorState)
-            {
-                case EDoorState.Open:
-                    gclass = link.SegmentClose;
-                    break;
-
-                case EDoorState.Shut:
-                    gclass = link.SegmentOpen;
-                    break;
-
-                default:
-                    return false;
-            }
-
-            Vector3 vector = GClass760.Rotate90(gclass.a - gclass.b, GClass760.SideTurn.right);
-            if (Vector3.Dot(vector.normalized, this.BotOwner.LookDirection) < 0f)
-            {
-                vector = -vector;
-            }
-            return !Vector.IsAngLessNormalized(Vector.NormalizeFastSelf(this.BotOwner.LookDirection), Vector.NormalizeFastSelf(vector), 0.9396926f);
         }
 
         // Token: 0x060010AF RID: 4271 RVA: 0x0004CED4 File Offset: 0x0004B0D4
@@ -587,7 +557,7 @@ namespace SAIN.SAINComponent.Classes.Mover
                     return data.DotProduct < 0;
 
                 case EDoorState.Shut:
-                    return data.DotProduct > 0.1f;
+                    return data.DotProduct > 0f;
 
                 default:
                     return false;

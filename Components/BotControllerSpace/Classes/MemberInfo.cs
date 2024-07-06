@@ -5,9 +5,11 @@ namespace SAIN.BotController.Classes
 {
     public class MemberInfo
     {
-        public MemberInfo(BotComponent sain)
+        private readonly Squad _squad;
+        public MemberInfo(BotComponent sain, Squad squad)
         {
-            SAIN = sain;
+            _squad = squad;
+            Bot = sain;
             Player = sain.Player;
             ProfileId = sain.ProfileId;
             Nickname = sain.Player?.Profile?.Nickname;
@@ -16,16 +18,21 @@ namespace SAIN.BotController.Classes
 
             sain.Decision.OnDecisionMade += UpdateDecisions;
             sain.Memory.Health.HealthStatusChanged += UpdateHealth;
+            sain.OnDispose += removeMe;
 
             UpdatePowerLevel();
         }
 
-        private void UpdateDecisions(SoloDecision solo, SquadDecision squad, SelfDecision self, float time)
+        private void removeMe()
+        {
+            _squad?.RemoveMember(ProfileId);
+        }
+
+        private void UpdateDecisions(CombatDecision solo, SquadDecision squad, SelfDecision self, BotComponent member)
         {
             SoloDecision = solo;
             SquadDecision = squad;
             SelfDecision = self;
-            ChangeDecisionTime = time;
 
             // Update power level here just to see if equipment changed.
             UpdatePowerLevel();
@@ -33,7 +40,7 @@ namespace SAIN.BotController.Classes
 
         public void UpdatePowerLevel()
         {
-            var aiData = SAIN?.Player?.AIData;
+            var aiData = Bot?.Player?.AIData;
             if (aiData != null)
             {
                 PowerLevel = aiData.PowerOfEquipment;
@@ -45,27 +52,27 @@ namespace SAIN.BotController.Classes
             HealthStatus = healthStatus;
         }
 
-        public readonly BotComponent SAIN;
+        public readonly BotComponent Bot;
         public readonly Player Player;
         public readonly string ProfileId;
         public readonly string Nickname;
 
-        public bool HasEnemy => SAIN?.HasEnemy == true;
+        public bool HasEnemy => Bot?.HasEnemy == true;
 
         public ETagStatus HealthStatus;
 
-        public SoloDecision SoloDecision { get; private set; }
+        public CombatDecision SoloDecision { get; private set; }
         public SquadDecision SquadDecision { get; private set; }
         public SelfDecision SelfDecision { get; private set; }
-        public float ChangeDecisionTime { get; private set; }
         public float PowerLevel { get; private set; }
 
         public void Dispose()
         {
-            if (SAIN != null)
+            if (Bot != null)
             {
-                SAIN.Decision.OnDecisionMade -= UpdateDecisions;
-                SAIN.Memory.Health.HealthStatusChanged -= UpdateHealth;
+                Bot.OnDispose -= removeMe;
+                Bot.Decision.OnDecisionMade -= UpdateDecisions;
+                Bot.Memory.Health.HealthStatusChanged -= UpdateHealth;
             }
         }
     }

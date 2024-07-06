@@ -30,7 +30,7 @@ namespace SAIN.SAINComponent.Classes.Mover
 
             var enemy = Bot.Enemy;
             var CurrentDecision = Bot.Decision.CurrentSoloDecision;
-            if (enemy == null || CurrentDecision != SoloDecision.HoldInCover)
+            if (enemy == null || CurrentDecision != CombatDecision.HoldInCover)
             {
                 ResetSideStep(currentSideStep);
                 return;

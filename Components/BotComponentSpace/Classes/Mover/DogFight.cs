@@ -32,6 +32,14 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         public void DogFightMove(bool aggressive)
         {
+            if (Player.IsInPronePose && 
+                Bot.Enemy?.IsVisible == true && 
+                Bot.Enemy.CanShoot)
+            {
+                Bot.Mover.Lean.HoldLean(1f);
+                return;
+            }
+            
             if (stopMoveToShoot())
             {
                 Status = EDogFightStatus.Shooting;

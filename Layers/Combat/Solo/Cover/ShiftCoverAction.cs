@@ -33,7 +33,7 @@ namespace SAIN.Layers.Combat.Solo.Cover
                     Bot.Mover.SetTargetMoveSpeed(GetSpeed());
                     Bot.Mover.SetTargetPose(GetPose());
                 }
-                else if (NewPoint != null && NewPoint.Status == CoverStatus.InCover)
+                else if (NewPoint != null && NewPoint.StraightDistanceStatus == CoverStatus.InCover)
                 {
                     Bot.Decision.EnemyDecisions.ShiftCoverComplete = true;
                 }
@@ -149,7 +149,7 @@ namespace SAIN.Layers.Combat.Solo.Cover
             if (NewPoint != null)
             {
                 stringBuilder.AppendLine("Cover In Use");
-                stringBuilder.AppendLabeledValue("Status", $"{NewPoint.Status}", Color.white, Color.yellow, true);
+                stringBuilder.AppendLabeledValue("Status", $"{NewPoint.StraightDistanceStatus}", Color.white, Color.yellow, true);
                 stringBuilder.AppendLabeledValue("Height / Value", $"{NewPoint.CoverHeight} {NewPoint.CoverValue}", Color.white, Color.yellow, true);
                 stringBuilder.AppendLabeledValue("Path Length", $"{NewPoint.PathLength}", Color.white, Color.yellow, true);
                 stringBuilder.AppendLabeledValue("Straight Distance", $"{(NewPoint.Position - Bot.Position).magnitude}", Color.white, Color.yellow, true);

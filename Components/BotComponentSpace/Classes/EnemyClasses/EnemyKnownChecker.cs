@@ -85,7 +85,7 @@ namespace SAIN.Components.BotComponentSpace.Classes.EnemyClasses
 
         private bool isBotSearching()
         {
-            if (Bot.Decision.CurrentSoloDecision == SoloDecision.Search)
+            if (Bot.Decision.CurrentSoloDecision == CombatDecision.Search)
             {
                 return true;
             }

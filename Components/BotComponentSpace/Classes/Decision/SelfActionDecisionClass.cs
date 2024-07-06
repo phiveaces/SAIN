@@ -487,7 +487,7 @@ namespace SAIN.SAINComponent.Classes.Decision
                 BotOwner.WeaponManager.Reload.CheckReloadLongTime();
                 _nextCheckReloadTime = Time.time + 0.5f;
                 _needToReload = false;
-                return true;
+                return Bot.Decision.CurrentSelfDecision == SelfDecision.Reload;
             }
 
             // Only allow reloading every 1 seconds to avoid spamming reload when the weapon data is bad

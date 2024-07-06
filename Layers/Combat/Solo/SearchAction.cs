@@ -23,19 +23,21 @@ namespace SAIN.Layers.Combat.Solo
         {
             while (true)
             {
-                if (_searchTarget == null)
+                var enemy = _searchTarget;
+                if (enemy == null)
                 {
-                    var enemy = Bot.Enemy;
+                    enemy = Bot.Enemy;
                     if (enemy == null)
                     {
                         yield return null;
                         continue;
                     }
                     _searchTarget = enemy;
+                    enemy = _searchTarget;
                     Search.ToggleSearch(true, enemy);
                 }
 
-                bool isBeingStealthy = _searchTarget.Hearing.EnemyHeardFromPeace;
+                bool isBeingStealthy = enemy.Hearing.EnemyHeardFromPeace;
                 if (isBeingStealthy)
                 {
                     _sprintEnabled = false;
@@ -49,7 +51,7 @@ namespace SAIN.Layers.Combat.Solo
                 if (_nextUpdateSearchTime < Time.time)
                 {
                     _nextUpdateSearchTime = Time.time + 0.1f;
-                    Search.Search(_sprintEnabled);
+                    Search.Search(_sprintEnabled, enemy);
                 }
 
                 Steer();

@@ -25,38 +25,38 @@ namespace SAIN.Layers.Combat.Solo
 
             switch (_lastDecision)
             {
-                case SoloDecision.MoveToEngage:
+                case CombatDecision.MoveToEngage:
                     return new Action(typeof(MoveToEngageAction), $"{_lastDecision}");
 
-                case SoloDecision.MeleeAttack:
+                case CombatDecision.MeleeAttack:
                     return new Action(typeof(MeleeAttackAction), $"{_lastDecision}");
 
-                case SoloDecision.RushEnemy:
+                case CombatDecision.RushEnemy:
                     return new Action(typeof(RushEnemyAction), $"{_lastDecision}");
 
-                case SoloDecision.ThrowGrenade:
+                case CombatDecision.ThrowGrenade:
                     return new Action(typeof(ThrowGrenadeAction), $"{_lastDecision}");
 
-                case SoloDecision.ShiftCover:
+                case CombatDecision.ShiftCover:
                     return new Action(typeof(ShiftCoverAction), $"{_lastDecision}");
 
-                case SoloDecision.RunToCover:
+                case CombatDecision.RunToCover:
                     return new Action(typeof(RunToCoverAction), $"{_lastDecision}");
 
-                case SoloDecision.Retreat:
+                case CombatDecision.Retreat:
                     return new Action(typeof(RunToCoverAction), $"{_lastDecision} + {_lastSelfDecision}");
 
-                case SoloDecision.MoveToCover:
+                case CombatDecision.MoveToCover:
                     return new Action(typeof(WalkToCoverAction), $"{_lastDecision}");
 
-                case SoloDecision.DogFight:
+                case CombatDecision.DogFight:
                     return new Action(typeof(DogFightAction), $"{_lastDecision}");
 
-                case SoloDecision.ShootDistantEnemy:
-                case SoloDecision.StandAndShoot:
+                case CombatDecision.ShootDistantEnemy:
+                case CombatDecision.StandAndShoot:
                     return new Action(typeof(StandAndShootAction), $"{_lastDecision}");
 
-                case SoloDecision.HoldInCover:
+                case CombatDecision.HoldInCover:
                     string label;
                     if (_lastSelfDecision != SelfDecision.None)
                         label = $"{_lastDecision} + {_lastSelfDecision}";
@@ -64,10 +64,10 @@ namespace SAIN.Layers.Combat.Solo
                         label = $"{_lastDecision}";
                     return new Action(typeof(HoldinCoverAction), label);
 
-                case SoloDecision.Search:
+                case CombatDecision.Search:
                     return new Action(typeof(SearchAction), $"{_lastDecision}");
 
-                case SoloDecision.Freeze:
+                case CombatDecision.Freeze:
                     return new Action(typeof(FreezeAction), $"{_lastDecision}");
 
                 default:
@@ -81,7 +81,7 @@ namespace SAIN.Layers.Combat.Solo
             {
                 return false;
             }
-            bool active = _currentDecision != SoloDecision.None;
+            bool active = _currentDecision != CombatDecision.None;
             setLayer(active);
             return active;
         }
@@ -108,9 +108,9 @@ namespace SAIN.Layers.Combat.Solo
 
         private bool _doSurgeryAction;
 
-        private SoloDecision _lastDecision = SoloDecision.None;
+        private CombatDecision _lastDecision = CombatDecision.None;
         private SelfDecision _lastSelfDecision = SelfDecision.None;
-        public SoloDecision _currentDecision => Bot.Decision.CurrentSoloDecision;
+        public CombatDecision _currentDecision => Bot.Decision.CurrentSoloDecision;
         public SelfDecision _currentSelfDecision => Bot.Decision.CurrentSelfDecision;
     }
 }

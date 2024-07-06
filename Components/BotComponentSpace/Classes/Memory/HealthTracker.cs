@@ -6,7 +6,7 @@ namespace SAIN.SAINComponent.Classes.Memory
 {
     public class HealthTracker : BotBase, IBotClass
     {
-        public Action<ETagStatus> HealthStatusChanged { get; set; }
+        public event Action<ETagStatus> HealthStatusChanged;
         public bool Healthy => HealthStatus == ETagStatus.Healthy;
         public bool Injured => HealthStatus == ETagStatus.Injured;
         public bool BadlyInjured => HealthStatus == ETagStatus.BadlyInjured;

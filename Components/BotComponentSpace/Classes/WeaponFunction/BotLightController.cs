@@ -85,7 +85,7 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
 
         public void HandleLightForEnemy()
         {
-            if (Bot.Decision.CurrentSoloDecision == SoloDecision.Search)
+            if (Bot.Decision.CurrentSoloDecision == CombatDecision.Search)
             {
                 return;
             }
@@ -104,7 +104,7 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
                 }
 
                 float maxTurnOnrange = 50f;
-                SoloDecision decision = Bot.Decision.CurrentSoloDecision;
+                CombatDecision decision = Bot.Decision.CurrentSoloDecision;
 
                 if (enemy.EnemyNotLooking && enemy.RealDistance <= maxTurnOnrange * 0.9f)
                 {

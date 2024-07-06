@@ -14,6 +14,21 @@ namespace SAIN.Preset.GlobalSettings
         [MinMax(0.01f, 1f, 100f)]
         public float AimDownSightsAimTimeMultiplier = 0.8f;
 
+        [Name("Enemy Move Scatter Max Buff")]
+        [Description("The max buff to bot scatter, so if their enemy is standing still. Scales with velocity. A value of 1 is disabled")]
+        [MinMax(1f, 1.5f, 100f)]
+        public float EnemyVelocityMaxBuff = 1.2f;
+
+        [Name("Enemy Move Scatter Max Debuff")]
+        [Description("The minimum debuff to bot scatter, so if their enemy is moving at full speed, but not sprinting. Scales with velocity. A value of 1 is disabled")]
+        [MinMax(0.5f, 1f, 100f)]
+        public float EnemyVelocityMaxDebuff = 0.8f;
+
+        [Name("Enemy Move Scatter Sprint Debuff")]
+        [Description("How much to divide bot scatter by if their enemy is sprinting. So the lower the number, the worse their aim will be. A value of 1 is disabled")]
+        [MinMax(0.5f, 1f, 100f)]
+        public float EnemySprintingScatterMulti = 0.66f;
+
         [Description("Lower is more scatter")]
         [Advanced]
         [MinMax(0.5f, 1f, 100f)]

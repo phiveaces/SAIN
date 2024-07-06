@@ -55,12 +55,12 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
                     Reason = EShootReason.None;
                     return false;
                 }
-                Bot.Steering.LookToPoint(targetPos);
+                //Bot.Steering.LookToPoint(targetPos);
                 if (Shooting)
                 {
                     return false;
                 }
-                if (Bot.Steering.AngleToPointFromLookDir(targetPos) > 5)
+                if (Bot.Steering.AngleToPointFromLookDir(targetPos) > 10)
                 {
                     return false;
                 }

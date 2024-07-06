@@ -1,5 +1,6 @@
 ﻿using EFT;
 using EFT.Interactive;
+using SAIN.Components;
 using SAIN.Helpers;
 using System;
 using System.Collections.Generic;
@@ -113,7 +114,18 @@ namespace SAIN.SAINComponent.Classes.Mover
 
         private bool isDoorOpenable(Door door)
         {
-            return door.enabled && door.gameObject.activeInHierarchy && door.Operatable;
+            if (!door.enabled || 
+                !door.gameObject.activeInHierarchy ||
+                !door.Operatable)
+            {
+                return false;
+            }
+            if (GlobalSettings.General.DisableAllDoors && 
+                GameWorldComponent.Instance.DisableDoor(door))
+            {
+                return false;
+            }
+            return true;
         }
 
         private void updateAllDoors(bool force)

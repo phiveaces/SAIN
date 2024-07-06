@@ -19,41 +19,44 @@ namespace SAIN.Layers.Combat.Solo.Cover
             ToggleAction(value);
         }
 
+        private bool _runFailed;
+
         public override IEnumerator ActionCoroutine()
         {
             while (true)
             {
-                yield return null;
-
-                Bot.Mover.SetTargetMoveSpeed(1f);
-                Bot.Mover.SetTargetPose(1f);
-
                 jumpToCover();
 
-                if (shallRecalcDestination())
+                if (_recalcMoveTimer < Time.time)
                 {
                     _moveSuccess = moveToCover(out bool sprinting, out CoverPoint coverDestination, false);
+                    if (_moveSuccess)
+                    {
+                        _runFailed = false;
+                    }
                     if (!_moveSuccess)
                     {
                         _moveSuccess = moveToCover(out sprinting, out coverDestination, true);
+                        _runFailed = true;
                     }
 
                     _sprinting = sprinting;
-                    Bot.Cover.CoverInUse = coverDestination;
 
                     if (_moveSuccess)
                     {
                         _recalcMoveTimer = Time.time + 2f;
-                        _shallJumpToCover = EFTMath.RandomBool(2)
+                        _shallJumpToCover = EFTMath.RandomBool(10)
                             && _sprinting
                             && BotOwner.Memory.IsUnderFire
                             && Bot.Info.Profile.IsPMC;
 
+                        Bot.Cover.CoverInUse = coverDestination;
                         _runDestination = coverDestination.Position;
                     }
                     else
                     {
-                        _recalcMoveTimer = Time.time + 0.5f;
+                        _recalcMoveTimer = Time.time + 0.25f;
+                        Bot.Cover.CoverInUse = null;
                     }
                 }
 
@@ -66,7 +69,7 @@ namespace SAIN.Layers.Combat.Solo.Cover
                 //    Bot.SelfActions.TryReload();
                 //}
 
-                if (Bot.Cover.CoverPoints.Count == 0 && !_moveSuccess)
+                if (!_moveSuccess)
                 {
                     Bot.Mover.EnableSprintPlayer(false);
                     Bot.Cover.CoverInUse = null;
@@ -78,10 +81,11 @@ namespace SAIN.Layers.Combat.Solo.Cover
                         Bot.Steering.LookToLastKnownEnemyPosition(Bot.Enemy);
                     }
                     Shoot.Update();
+                    yield return null;
                     continue;
                 }
 
-                if (!Bot.Mover.SprintController.Running)
+                if (!isRunning)
                 {
                     Bot.Mover.EnableSprintPlayer(false);
                     if (!Bot.Steering.SteerByPriority(false))
@@ -89,20 +93,17 @@ namespace SAIN.Layers.Combat.Solo.Cover
                         Bot.Steering.LookToLastKnownEnemyPosition(Bot.Enemy);
                     }
                     Shoot.Update();
+                    yield return null;
                     continue;
                 }
-                BotOwner.AimingData?.LoseTarget();
+                yield return null;
             }
         }
 
         public override void Update()
         {
-        }
-
-        private bool shallRecalcDestination()
-        {
-            return _recalcMoveTimer < Time.time &&
-                (!Bot.Mover.SprintController.Running || Bot.Cover.CoverInUse?.IsBad == true);
+            Bot.Mover.SetTargetMoveSpeed(1f);
+            Bot.Mover.SetTargetPose(1f);
         }
 
         private void jumpToCover()
@@ -128,12 +129,12 @@ namespace SAIN.Layers.Combat.Solo.Cover
 
         private bool moveToCover(out bool sprinting, out CoverPoint coverDestination, bool tryWalk)
         {
-            if (Bot.Mover.SprintController.Running && Bot.Mover.SprintController.Canceling)
-            {
-                sprinting = true;
-                coverDestination = null;
-                return false;
-            }
+            //if (Bot.Mover.SprintController.Running && Bot.Mover.SprintController.Canceling)
+            //{
+            //    sprinting = true;
+            //    coverDestination = null;
+            //    return false;
+            //}
             if (tryRun(Bot.Cover.CoverInUse, out sprinting, tryWalk))
             {
                 coverDestination = Bot.Cover.CoverInUse;
@@ -141,15 +142,15 @@ namespace SAIN.Layers.Combat.Solo.Cover
             }
 
             CoverPoint fallback = Bot.Cover.FallBackPoint;
-            SoloDecision currentDecision = Bot.Decision.CurrentSoloDecision;
+            CombatDecision currentDecision = Bot.Decision.CurrentSoloDecision;
 
-            if (currentDecision == SoloDecision.Retreat &&
-                fallback != null &&
-                tryRun(fallback, out sprinting, tryWalk))
-            {
-                coverDestination = fallback;
-                return true;
-            }
+            //if (currentDecision == CombatDecision.Retreat &&
+            //    fallback != null &&
+            //    tryRun(fallback, out sprinting, tryWalk))
+            //{
+            //    coverDestination = fallback;
+            //    return true;
+            //}
 
             Bot.Cover.SortPointsByPathDist();
 
@@ -187,6 +188,8 @@ namespace SAIN.Layers.Combat.Solo.Cover
             float dot = Vector3.Dot(coverPoint.DirectionToColliderNormal, (target - coverPoint.Position).normalized);
             return dot > minDot;
         }
+
+        private bool isRunning => Bot.Mover.SprintController.Running;
 
         private Vector3 findTarget()
         {
@@ -241,10 +244,10 @@ namespace SAIN.Layers.Combat.Solo.Cover
             if (tryWalk)
             {
                 bool shallCrawl = Bot.Player.IsInPronePose || (Bot.Decision.CurrentSelfDecision != SelfDecision.None
-                    && coverPoint.Status == CoverStatus.FarFromCover
+                    && coverPoint.StraightDistanceStatus == CoverStatus.FarFromCover
                     && Bot.Mover.Prone.ShallProneHide());
 
-                result = Bot.Mover.GoToPoint(destination, out _, 0.5f, shallCrawl, false);
+                return Bot.Mover.GoToPoint(destination, out _, -1f, shallCrawl, false);
             }
             return result;
         }
@@ -262,28 +265,18 @@ namespace SAIN.Layers.Combat.Solo.Cover
         public override void Start()
         {
             Toggle(true);
-
-            if (Bot.Decision.CurrentSoloDecision == SoloDecision.AvoidGrenade
-                && Bot.Talk.GroupTalk.FriendIsClose)
-            {
-                Bot.Talk.TalkAfterDelay(EPhraseTrigger.OnEnemyGrenade, ETagStatus.Combat, 0.33f);
-            }
-
-            Bot.Mover.SprintController.CancelRun(0.25f);
             _recalcMoveTimer = 0f;
             _shallJumpToCover = false;
             _sprinting = false;
             _moveSuccess = false;
+            _runFailed = false;
         }
 
         public override void Stop()
         {
             Toggle(false);
-
             Bot.Mover.DogFight.ResetDogFightStatus();
-            Bot.Mover.SprintController.CancelRun(0.25f);
             Bot.Cover.CheckResetCoverInUse();
-            Bot.Mover.Sprint(false);
         }
 
         public override void BuildDebugText(StringBuilder stringBuilder)
@@ -291,31 +284,34 @@ namespace SAIN.Layers.Combat.Solo.Cover
             stringBuilder.AppendLine("Run To Cover Info");
 
             var sprint = Bot.Mover.SprintController;
-            if (sprint.Running)
-            {
-                stringBuilder.AppendLabeledValue("Running Status", $"{sprint.CurrentRunStatus}", Color.white, Color.yellow, true);
-            }
+            stringBuilder.AppendLabeledValue("Move Success?", $"{_moveSuccess}", Color.white, Color.yellow, true);
+            stringBuilder.AppendLabeledValue("Run Success?", $"{!_runFailed}", Color.white, Color.yellow, true);
+            stringBuilder.AppendLabeledValue("Running?", $"{sprint.Running}", Color.white, Color.yellow, true);
+            stringBuilder.AppendLabeledValue("Running Status", $"{sprint.CurrentRunStatus}", Color.white, Color.yellow, true);
 
             var cover = Bot.Cover;
             stringBuilder.AppendLabeledValue("CoverFinder State", $"{cover.CurrentCoverFinderState}", Color.white, Color.yellow, true);
             stringBuilder.AppendLabeledValue("Cover Count", $"{cover.CoverPoints.Count}", Color.white, Color.yellow, true);
-            if (Bot.CurrentTargetPosition != null)
-            {
-                stringBuilder.AppendLabeledValue("Current Target Position", $"{Bot.CurrentTargetPosition.Value}", Color.white, Color.yellow, true);
-            }
-            else
-            {
-                stringBuilder.AppendLabeledValue("Current Target Position", null, Color.white, Color.yellow, true);
-            }
 
             var _coverDestination = Bot.Cover.CoverInUse;
             if (_coverDestination != null)
             {
-                stringBuilder.AppendLine("Cover Destination");
-                stringBuilder.AppendLabeledValue("Status", $"{_coverDestination.Status}", Color.white, Color.yellow, true);
-                stringBuilder.AppendLabeledValue("Height / Value", $"{_coverDestination.CoverHeight} {_coverDestination.CoverValue}", Color.white, Color.yellow, true);
+                stringBuilder.AppendLine("CoverInUse");
+                stringBuilder.AppendLabeledValue("Is Bad?", $"{_coverDestination.IsBad}", Color.white, Color.yellow, true);
+                stringBuilder.AppendLabeledValue("Straight Status", $"{_coverDestination.StraightDistanceStatus}", Color.white, Color.yellow, true);
+                stringBuilder.AppendLabeledValue("Straight Distance", $"{_coverDestination.Distance}", Color.white, Color.yellow, true);
+                stringBuilder.AppendLabeledValue("Path Length Status", $"{_coverDestination.PathDistanceStatus}", Color.white, Color.yellow, true);
                 stringBuilder.AppendLabeledValue("Path Length", $"{_coverDestination.PathLength}", Color.white, Color.yellow, true);
-                stringBuilder.AppendLabeledValue("Straight Distance", $"{(_coverDestination.Position - Bot.Position).magnitude}", Color.white, Color.yellow, true);
+                stringBuilder.AppendLabeledValue("Path Calc Status", $"{_coverDestination.PathToPoint.status}", Color.white, Color.yellow, true);
+
+                Vector3? lastCorner = _coverDestination.PathToPoint.LastCorner();
+                if (lastCorner != null)
+                {
+                    float difference = (lastCorner.Value - _coverDestination.Position).magnitude;
+                    stringBuilder.AppendLabeledValue("Distance To Last Corner", $"{(lastCorner.Value - Bot.Position).magnitude}", Color.white, Color.yellow, true);
+                    stringBuilder.AppendLabeledValue("Last Path Corner to Position Difference", $"{(lastCorner.Value - _coverDestination.Position).magnitude}", Color.white, Color.yellow, true);
+                }
+                stringBuilder.AppendLabeledValue("Height / Value", $"{_coverDestination.CoverHeight} {_coverDestination.CoverValue}", Color.white, Color.yellow, true);
             }
         }
 

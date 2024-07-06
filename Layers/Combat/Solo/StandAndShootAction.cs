@@ -47,7 +47,7 @@ namespace SAIN.Layers.Combat.Solo
             {
                 Bot.Mover.StopMove();
                 BotOwner.Mover.SprintPause(0.5f);
-                shallResume = Bot.Decision.CurrentSoloDecision == SoloDecision.ShootDistantEnemy;
+                shallResume = Bot.Decision.CurrentSoloDecision == CombatDecision.ShootDistantEnemy;
             }
 
             Bot.Mover.Lean.HoldLean(0.75f);
@@ -55,6 +55,10 @@ namespace SAIN.Layers.Combat.Solo
 
         private bool moveShoot()
         {
+            if (Bot.Player.IsInPronePose)
+            {
+                return false;
+            }
             if (Bot.Enemy != null &&
                 Bot.Enemy.RealDistance < 50)
             {

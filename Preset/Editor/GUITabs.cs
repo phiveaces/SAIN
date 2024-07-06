@@ -114,13 +114,13 @@ namespace SAIN.Editor
                     Space(spacing / 2f);
 
                     if (Button("Reset"))
-                        SAINPlugin.ForceSoloDecision = SoloDecision.None;
+                        SAINPlugin.ForceSoloDecision = CombatDecision.None;
 
                     Space(spacing / 2f);
 
                     SAINPlugin.ForceSoloDecision = BuilderClass.SelectionGrid(
                         SAINPlugin.ForceSoloDecision,
-                        EnumValues.GetEnum<SoloDecision>());
+                        EnumValues.GetEnum<CombatDecision>());
                 }
 
                 Space(spacing);

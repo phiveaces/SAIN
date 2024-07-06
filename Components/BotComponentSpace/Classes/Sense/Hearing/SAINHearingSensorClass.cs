@@ -1,14 +1,9 @@
 ﻿using EFT;
 using SAIN.Helpers;
-using SAIN.Preset;
-using SAIN.Preset.GlobalSettings;
 using SAIN.SAINComponent.Classes.EnemyClasses;
-using SAIN.SAINComponent.Classes.Mover;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.UIElements.Experimental;
 
 namespace SAIN.SAINComponent.Classes
 {
@@ -146,9 +141,13 @@ namespace SAIN.SAINComponent.Classes
             return pos;
         }
 
-        private IEnumerator baseHearDelay(float distance)
+        private IEnumerator baseHearDelay(float distance, float soundSpeed = -1f)
         {
-            float delay = distance / SPEED_OF_SOUND;
+            if (soundSpeed == -1f)
+            {
+                soundSpeed = SPEED_OF_SOUND;
+            }
+            float delay = distance / soundSpeed;
             if (Bot?.EnemyController?.AtPeace == true)
             {
                 delay += SAINPlugin.LoadedPreset.GlobalSettings.Hearing.BaseHearingDelayAtPeace;
@@ -162,7 +161,10 @@ namespace SAIN.SAINComponent.Classes
 
         private IEnumerator delayReact(BotSoundStruct sound)
         {
-            yield return baseHearDelay(sound.Info.EnemyDistance);
+            var weapon = sound.Info.EnemyPlayer.Equipment.CurrentWeapon;
+            float speed = weapon != null ? weapon.BulletSpeed : -1f;
+
+            yield return baseHearDelay(sound.Info.EnemyDistance, speed);
 
             if (Bot != null && 
                 sound.Info.EnemyPlayer != null && 

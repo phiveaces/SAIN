@@ -2,6 +2,7 @@
 using SAIN.Preset;
 using System;
 using System.Reflection;
+using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes.WeaponFunction
 {
@@ -90,14 +91,9 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
         {
             if (!CanAim)
             {
-                LoseTarget();
+                BotOwner.AimingData?.LoseTarget();
                 return;
             }
-        }
-
-        public void LoseTarget()
-        {
-            BotOwner.AimingData?.LoseTarget();
         }
 
         public void Dispose()

@@ -1,5 +1,6 @@
 ﻿using EFT;
 using SAIN.Helpers.Events;
+using SAIN.SAINComponent.Classes.Decision.Reasons;
 using SAIN.SAINComponent.SubComponents.CoverFinder;
 using System;
 using UnityEngine;
@@ -9,14 +10,14 @@ namespace SAIN.SAINComponent.Classes.Decision
 {
     public class SAINDecisionClass : BotBase, IBotClass
     {
-        public event Action<SoloDecision, SquadDecision, SelfDecision, float> OnDecisionMade;
+        public event Action<CombatDecision, SquadDecision, SelfDecision, BotComponent> OnDecisionMade;
 
         public bool HasDecision => HasDecisionToggle.Value;
         public ToggleEvent HasDecisionToggle { get; } = new ToggleEvent();
 
 
-        public SoloDecision CurrentSoloDecision { get; private set; }
-        public SoloDecision PreviousSoloDecision { get; private set; }
+        public CombatDecision CurrentSoloDecision { get; private set; }
+        public CombatDecision PreviousSoloDecision { get; private set; }
 
         public SquadDecision CurrentSquadDecision { get; private set; }
         public SquadDecision PreviousSquadDecision { get; private set; }
@@ -36,9 +37,9 @@ namespace SAIN.SAINComponent.Classes.Decision
             {
                 switch (CurrentSoloDecision)
                 {
-                    case SoloDecision.Retreat:
-                    case SoloDecision.RunAway:
-                    case SoloDecision.RunToCover:
+                    case CombatDecision.Retreat:
+                    case CombatDecision.RunAway:
+                    case CombatDecision.RunToCover:
                         return true;
 
                     default:
@@ -53,7 +54,7 @@ namespace SAIN.SAINComponent.Classes.Decision
         public SquadDecisionClass SquadDecisions { get; private set; }
 
         public bool IsSearching => 
-            CurrentSoloDecision == SoloDecision.Search || 
+            CurrentSoloDecision == CombatDecision.Search || 
             CurrentSquadDecision == SquadDecision.Search || 
             CurrentSquadDecision == SquadDecision.GroupSearch;
 
@@ -86,8 +87,8 @@ namespace SAIN.SAINComponent.Classes.Decision
         private float _nextGetDecisionTime;
         const float DECISION_FREQUENCY = 1f / DECISION_FREQUENCY_FPS;
         const float DECISION_FREQUENCY_PEACE = 1f / DECISION_FREQUENCY_PEACE_FPS;
-        const float DECISION_FREQUENCY_FPS = 10;
-        const float DECISION_FREQUENCY_PEACE_FPS = 5;
+        const float DECISION_FREQUENCY_FPS = 30;
+        const float DECISION_FREQUENCY_PEACE_FPS = 10;
 
         public void Dispose()
         {
@@ -107,19 +108,97 @@ namespace SAIN.SAINComponent.Classes.Decision
 
             if (DogFightDecision.ShallDogFight())
             {
-                SetDecisions(SoloDecision.DogFight, SquadDecision.None, SelfDecision.None);
+                SetDecisions(CombatDecision.DogFight, SquadDecision.None, SelfDecision.None);
                 return;
             }
 
             if (BotOwner.WeaponManager.IsMelee)
             {
-                SetDecisions(SoloDecision.MeleeAttack, SquadDecision.None, SelfDecision.None);
+                SetDecisions(CombatDecision.MeleeAttack, SquadDecision.None, SelfDecision.None);
                 return;
             }
 
             if (SelfActionDecisions.GetDecision(out SelfDecision selfDecision))
             {
-                SetDecisions(SoloDecision.Retreat, SquadDecision.None, selfDecision);
+                var combatDecision = Bot.Cover.InCover ? CombatDecision.HoldInCover : CombatDecision.Retreat;
+                SetDecisions(combatDecision, SquadDecision.None, selfDecision);
+                return;
+            }
+
+            if (CheckContinueRetreat())
+            {
+                SetDecisions(CombatDecision.Retreat, SquadDecision.None, SelfDecision.None);
+                return;
+            }
+
+            if (SquadDecisions.GetDecision(out SquadDecision squadDecision))
+            {
+                SetDecisions(CombatDecision.None, squadDecision, SelfDecision.None);
+                return;
+            }
+
+            if (EnemyDecisions.GetDecision(out CombatDecision soloDecision))
+            {
+                SetDecisions(soloDecision, SquadDecision.None, SelfDecision.None);
+                return;
+            }
+
+            SetDecisions(CombatDecision.None, SquadDecision.None, SelfDecision.None);
+        }
+
+
+        private BotDecision<SelfDecision>? _self;
+        private BotDecision<CombatDecision>? _combat;
+        private BotDecision<SquadDecision>? _squad;
+
+        private void setSelf(BotDecision<SelfDecision>? decision)
+        {
+
+        }
+
+        private void setCombat(BotDecision<CombatDecision>? decision)
+        {
+
+        }
+
+        private void setSquad(BotDecision<SquadDecision>? decision)
+        {
+
+        }
+
+        private void getDecisionStructs()
+        {
+            EnemyDecisions.DebugShallSearch = null;
+
+            if (Bot.EnemyController.EnemyLists.KnownEnemies.Count == 0)
+            {
+                setCombat(null);
+                setSelf(null);
+                setSquad(null);
+                return;
+            }
+
+            if (DogFightDecision.ShallDogFight())
+            {
+                setSelf(null);
+                setSquad(null);
+                setCombat(new BotDecision<CombatDecision>(CombatDecision.DogFight, "dogFight"));
+                return;
+            }
+
+            if (BotOwner.WeaponManager.IsMelee)
+            {
+                setSelf(null);
+                setSquad(null);
+                setCombat(new BotDecision<CombatDecision>(CombatDecision.MeleeAttack, "meleeAttack"));
+                return;
+            }
+
+            if (SelfActionDecisions.GetDecision(out SelfDecision selfDecision))
+            {
+                setSquad(null);
+                setCombat(new BotDecision<CombatDecision>(CombatDecision.Retreat, "selfCare"));
+                setSelf(new BotDecision<SelfDecision>(selfDecision, "selfCare"));
                 return;
             }
 
@@ -130,24 +209,29 @@ namespace SAIN.SAINComponent.Classes.Decision
 
             if (SquadDecisions.GetDecision(out SquadDecision squadDecision))
             {
-                SetDecisions(SoloDecision.None, squadDecision, SelfDecision.None);
+                setSelf(null);
+                setCombat(null);
+                setSquad(new BotDecision<SquadDecision>(squadDecision, "squadAction"));
                 return;
             }
 
-            if (EnemyDecisions.GetDecision(out SoloDecision soloDecision))
+            setSelf(null);
+            setSquad(null);
+
+            if (!Bot.HasEnemy)
             {
-                SetDecisions(soloDecision, SquadDecision.None, SelfDecision.None);
+                setCombat(null);
                 return;
             }
-
-            SetDecisions(SoloDecision.None, SquadDecision.None, SelfDecision.None);
+            var combat = EnemyDecisions.GetDecision();
+            setCombat(combat);
         }
 
-        private void SetDecisions(SoloDecision solo, SquadDecision squad, SelfDecision self)
+        private void SetDecisions(CombatDecision solo, SquadDecision squad, SelfDecision self)
         {
             if (SAINPlugin.DebugMode)
             {
-                if (SAINPlugin.ForceSoloDecision != SoloDecision.None)
+                if (SAINPlugin.ForceSoloDecision != CombatDecision.None)
                 {
                     solo = SAINPlugin.ForceSoloDecision;
                 }
@@ -164,7 +248,7 @@ namespace SAIN.SAINComponent.Classes.Decision
             if (checkForNewDecision(solo, squad, self))
             {
                 bool hasDecision =
-                    solo != SoloDecision.None ||
+                    solo != CombatDecision.None ||
                     self != SelfDecision.None ||
                     squad != SquadDecision.None;
 
@@ -172,11 +256,11 @@ namespace SAIN.SAINComponent.Classes.Decision
 
                 TotalDecisionsMade++;
                 ChangeDecisionTime = Time.time;
-                OnDecisionMade?.Invoke(solo, squad, self, Time.time);
+                OnDecisionMade?.Invoke(solo, squad, self, Bot);
             }
         }
 
-        private bool checkForNewDecision(SoloDecision newSoloDecision, SquadDecision newSquadDecision, SelfDecision newSelfDecision)
+        private bool checkForNewDecision(CombatDecision newSoloDecision, SquadDecision newSquadDecision, SelfDecision newSelfDecision)
         {
             bool newDecision = false;
 
@@ -218,7 +302,7 @@ namespace SAIN.SAINComponent.Classes.Decision
         {
             if (!value)
             {
-                SetDecisions(SoloDecision.None, SquadDecision.None, SelfDecision.None);
+                SetDecisions(CombatDecision.None, SquadDecision.None, SelfDecision.None);
             }
         }
 
@@ -239,7 +323,7 @@ namespace SAIN.SAINComponent.Classes.Decision
             {
                 return false;
             }
-            if (CurrentSoloDecision == SoloDecision.AvoidGrenade)
+            if (CurrentSoloDecision == CombatDecision.AvoidGrenade)
             {
                 if (straightDist < 5f)
                 {
@@ -291,28 +375,27 @@ namespace SAIN.SAINComponent.Classes.Decision
 
         private bool CheckContinueRetreat()
         {
-            bool runningToCover = CurrentSoloDecision == SoloDecision.Retreat || CurrentSoloDecision == SoloDecision.RunToCover;
+            bool runningToCover = CurrentSoloDecision == CombatDecision.Retreat || CurrentSoloDecision == CombatDecision.RunToCover;
             if (!runningToCover)
+            {
+                return false;
+            }
+            if (Bot.Cover.InCover)
             {
                 return false;
             }
 
             float timeChangeDec = Bot.Decision.TimeSinceChangeDecision;
-            if (timeChangeDec < 1)
+            if (timeChangeDec < 0.5f)
             {
                 return true;
             }
 
-            if (timeChangeDec > 5 && 
+            if (timeChangeDec > 3 && 
                 !Bot.BotStuck.BotHasChangedPosition)
             {
                 return false;
             }
-
-            //if (Running && !Bot.BotStuck.BotHasChangedPosition && Bot.BotStuck.TimeSpentNotMoving > 1f && timeChangeDec > 2f)
-            //{
-            //    return false;
-            //}
 
             CoverPoint coverInUse = Bot.Cover.CoverInUse;
             if (coverInUse == null)
@@ -320,16 +403,16 @@ namespace SAIN.SAINComponent.Classes.Decision
                 return false;
             }
 
-            switch (coverInUse.Status)
+            switch (coverInUse.PathDistanceStatus)
             {
                 case CoverStatus.InCover:
                     return false;
 
                 case CoverStatus.CloseToCover:
-                    return Bot.Mover.SprintController.Running || BotOwner.Mover.IsMoving;
+                    return Bot.Mover.SprintController.Running;
 
                 default:
-                    return !coverInUse.IsBad;
+                    return Bot.Mover.SprintController.Running && !coverInUse.IsBad;
             }
         }
 
@@ -337,9 +420,10 @@ namespace SAIN.SAINComponent.Classes.Decision
         private float _calcPathFreq = 0.5f;
         private float _grenadePathDist;
 
-        public static readonly SoloDecision[] RETREAT_DECISIONS =
+        public static readonly CombatDecision[] RETREAT_DECISIONS =
         { 
-            SoloDecision.Retreat 
+            CombatDecision.Retreat,
+            CombatDecision.RunToCover,
         };
     }
 }

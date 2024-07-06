@@ -1,6 +1,5 @@
 ﻿using EFT;
 using SAIN.Helpers;
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
@@ -57,7 +56,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
                 {
                     return _canSeeLast;
                 }
-                _nextCheckLast = Time.time + 0.33f;
+                _nextCheckLast = Time.time + 0.2f;
 
                 Vector3 cornerTarget = last.Value + Vector3.up;
                 Vector3 headPos = Bot.Transform.EyePosition;
@@ -112,7 +111,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
         public SAINEnemyPath(Enemy enemy) : base(enemy)
         {
             PathToEnemy = new NavMeshPath();
-            EnemyCorners = new EnemyCornerDictionary(enemy.Bot.Transform);
+            EnemyCorners = new EnemyCornerDictionary(enemy.Bot.Transform, enemy.BotOwner.WeaponRoot);
             _blindCornerFinder = new BlindCornerFinder(enemy);
         }
 
@@ -257,6 +256,7 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
             bool performanceMode = SAINPlugin.LoadedPreset.GlobalSettings.Performance.PerformanceMode;
             bool currentEnemy = Enemy.IsCurrentEnemy;
             bool isAI = Enemy.IsAI;
+            bool searchingForEnemy = Enemy.Events.OnSearch.Value;
             float distance = Enemy.RealDistance;
 
             float maxDelay = isAI ? MAX_FREQ_CALCPATH_AI : MAX_FREQ_CALCPATH;
@@ -264,6 +264,8 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
                 maxDelay *= CURRENTENEMY_COEF;
             if (performanceMode)
                 maxDelay *= PERFORMANCE_MODE_COEF;
+            if (searchingForEnemy)
+                maxDelay *= ACTIVE_SEARCH_COEF;
 
             if (distance > MAX_FREQ_CALCPATH_DISTANCE)
             {
@@ -275,6 +277,8 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
                 minDelay *= CURRENTENEMY_COEF;
             if (performanceMode)
                 minDelay *= PERFORMANCE_MODE_COEF;
+            if (searchingForEnemy)
+                minDelay *= ACTIVE_SEARCH_COEF;
 
             if (distance < MIN_FREQ_CALCPATH_DISTANCE)
             {
@@ -299,6 +303,8 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
 
         private float _nextLogTime;
 
+        private const float ACTIVE_SEARCH_COEF = 0.5f;
+
         private const float MAX_FREQ_CALCPATH = 2f;
         private const float MAX_FREQ_CALCPATH_AI = 4f;
         private const float MAX_FREQ_CALCPATH_DISTANCE = 250f;
@@ -322,10 +328,14 @@ namespace SAIN.SAINComponent.Classes.EnemyClasses
 
         private bool checkPositionsChanged(Vector3 botPosition, Vector3 enemyPosition)
         {
+            if (Enemy.Events.OnSearch.Value)
+            {
+                return true;
+            }
             // Did we already check the current enemy position and has the bot not moved? dont recalc path then
             if (_enemyLastPosChecked != null
                 && (_enemyLastPosChecked.Value - enemyPosition).sqrMagnitude < 0.1f
-                && (_botLastPosChecked - botPosition).sqrMagnitude < 0.1f)
+                && (_botLastPosChecked - botPosition).sqrMagnitude < 0.05f)
             {
                 return false;
             }

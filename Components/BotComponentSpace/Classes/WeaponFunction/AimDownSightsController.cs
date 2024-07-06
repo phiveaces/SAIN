@@ -130,7 +130,7 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
             {
                 result = EAimDownSightsStatus.Sprinting;
             }
-            else if (Bot.Decision.CurrentSoloDecision == SoloDecision.ShootDistantEnemy)
+            else if (Bot.Decision.CurrentSoloDecision == CombatDecision.ShootDistantEnemy)
             {
                 result = EAimDownSightsStatus.StandAndShoot;
             }
@@ -154,24 +154,24 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction
             {
                 switch (Bot.Decision.CurrentSoloDecision)
                 {
-                    case SoloDecision.RunToCover:
-                    case SoloDecision.MoveToCover:
+                    case CombatDecision.RunToCover:
+                    case CombatDecision.MoveToCover:
                         result = EAimDownSightsStatus.MovingToCover;
                         break;
 
-                    case SoloDecision.HoldInCover:
+                    case CombatDecision.HoldInCover:
                         result = EAimDownSightsStatus.HoldInCover;
                         break;
 
-                    case SoloDecision.StandAndShoot:
+                    case CombatDecision.StandAndShoot:
                         result = EAimDownSightsStatus.StandAndShoot;
                         break;
 
-                    case SoloDecision.DogFight:
+                    case CombatDecision.DogFight:
                         result = EAimDownSightsStatus.DogFight;
                         break;
 
-                    case SoloDecision.Search:
+                    case CombatDecision.Search:
                         result = Bot.Search.CurrentState != ESearchMove.DirectMove ? EAimDownSightsStatus.SearchPeekWait : EAimDownSightsStatus.None;
                         break;
 

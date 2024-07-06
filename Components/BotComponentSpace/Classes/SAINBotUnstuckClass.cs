@@ -626,9 +626,9 @@ namespace SAIN.SAINComponent.Classes.Debug
 
         public bool BotIsStuck { get; private set; }
 
-        private bool CanBeStuckDecisions(SoloDecision decision)
+        private bool CanBeStuckDecisions(CombatDecision decision)
         {
-            return decision == SoloDecision.Search || decision == SoloDecision.MoveToCover || decision == SoloDecision.DogFight || decision == SoloDecision.RunToCover || decision == SoloDecision.RunAway;
+            return decision == CombatDecision.Search || decision == CombatDecision.MoveToCover || decision == CombatDecision.DogFight || decision == CombatDecision.RunToCover || decision == CombatDecision.RunAway;
         }
 
         public bool BotStuckOnPlayer()
