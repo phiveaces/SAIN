@@ -6,7 +6,7 @@ using SAIN.Components;
 using System.Reflection;
 using UnityEngine;
 using static SAIN.Helpers.Shoot;
-using WeaponAIPresetManager = GClass396;
+using WeaponAIPresetManager = GClass395;
 
 namespace SAIN.Patches.Shoot.RateOfFire
 {
